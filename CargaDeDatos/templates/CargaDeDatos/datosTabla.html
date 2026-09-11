@@ -1,0 +1,179 @@
+{% load static %}
+<div class="col-12 mb-3">
+    <form id="uploadForm" onsubmit="event.preventDefault(); enviarAlServidor();">
+        {% csrf_token %}
+        <div class="upload-container mb-3" id="dropArea">
+            <i class="fas fa-cloud-upload-alt fa-3x mb-2 text-primary"></i>
+            <p class="my-2">Arrastra tu archivo <strong class="text-green">CSV</strong> aquí o haz <strong
+                    class="text-septimo">click aquí</strong>
+                para buscar </p>
+            <p class="my-2">Una vez cargado tu archivo, dar click en el boton de <strong class="text-tercero">Cargar
+                    Datos</strong></p>
+
+            <input type="file" name="file" id="fileInput" hidden accept=".csv, .xlsx, .xls">
+            <div id="fileName" class="text-muted small"></div>
+        </div>
+        <button type="submit" class="btn btn-tercero w-100 py-2 shadow-sm text-white" id="botonCargar">
+            Cargar datos
+        </button>
+    </form>
+</div>
+<script>
+    const boton = document.getElementById('botonCargar');
+
+    function deshabilitarBoton() {
+        boton.disabled = true;
+
+    }
+    function habilitarBoton() {
+        boton.disabled = false;
+    }
+
+
+    const fileInput = document.getElementById('fileInput');
+    function cargarTabla() {
+        if (fileInput.files.length === 0) {
+            alert('No se ha subido ningun archivo, favor de checarlo');
+        } else {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const csvText = e.target.result;
+                const rows = csvText.trim().split('\n');
+                const regexCSV = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+                const reemplazos = {
+                    'física_con_actividad_económica': 'fisica',
+                    'moral_legalmente_constituida': 'moral'
+                };
+                const data = rows.map(row => {
+                    return row.split(regexCSV).map(v => {
+                        let text = v.trim().replace(/^"|"$/g, '');
+                        return reemplazos[text] || text;
+                    });
+                });
+                const location = document.getElementById('tablaCargada');
+                location.innerHTML = '';
+                location.className = 'col-12 border border-primary border-3 overflow-scroll';
+
+                const tabla = document.createElement('table');
+                tabla.className = 'table table-striped table-hover m-0 w-100';
+
+                const thead = document.createElement('thead');
+                const trHead = document.createElement('tr');
+                const columnas = [
+                    'Fecha', 'Tipo', 'Interés', 'Medio contacto',
+                    'Nombre', 'Correo', 'Número', 'Ciudad', 'Comentarios'
+                ];
+
+                columnas.forEach(col => {
+                    const th = document.createElement('th');
+                    th.className = 'text-nowrap bg-primary text-white';
+                    th.textContent = col;
+                    trHead.appendChild(th);
+                });
+
+                thead.appendChild(trHead);
+                tabla.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                data.forEach(item => {
+                    if (item.length > 1) {
+                        const row = document.createElement('tr');
+                        item.forEach(cellText => {
+                            const td = document.createElement('td');
+                            td.textContent = cellText;
+                            row.appendChild(td);
+                        });
+                        tbody.appendChild(row);
+                    }
+                });
+
+                tabla.appendChild(tbody);
+                location.appendChild(tabla);
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+    }
+    const dropArea = document.getElementById('dropArea');
+    const fileNameDisplay = document.getElementById('fileName');
+
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('dragover');
+    });
+
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('dragover');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        updateFileName();
+    });
+
+    fileInput.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = `Archivo seleccionado: ${fileInput.files[0].name}`;
+            cargarTabla()
+        }
+    }
+
+
+    async function enviarAlServidor() {
+        const fileInput = document.getElementById('fileInput');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const uploadForm = document.getElementById('uploadForm');
+        const location = document.getElementById('tablaCargada');
+        const fileNameDisplay = document.getElementById('fileName');
+
+        if (fileInput.files.length === 0) {
+            alert('Selecciona un archivo');
+            habilitarBoton();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('archivo_csv', fileInput.files[0]);
+        deshabilitarBoton();
+
+        try {
+            const response = await fetch("{% url 'CargaDeDatos:CargarAServidor' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            const mensaje = document.getElementById('mensaje');
+
+            if (result.color) {
+                mensaje.style.color = result.color;
+            }
+
+            mensaje.textContent = (result.mensaje || '') + " - " + (result.datos || '');
+
+            if (response.ok) {
+                uploadForm.reset();
+                fileNameDisplay.textContent = '';
+                location.innerHTML = '';
+                location.classList.remove('border', 'border-primary', 'border-3', 'overflow-scroll');
+                habilitarBoton();
+            }
+
+            setTimeout(() => {
+                mensaje.textContent = '';
+            }, 5000);
+
+        } catch (error) {
+            console.error('Error en la peticion:', error);
+            habilitarBoton();
+        }
+    }
+</script>

@@ -1,0 +1,136 @@
+{% load static %}
+<style>
+    .nav-custom {
+        ul.navbar-nav {
+            display: flex;
+            align-items: center;
+
+            li.nav-item {
+                list-style: none;
+                position: relative;
+
+                a.nav-link {
+                    position: relative;
+                    display: inline-block;
+                    text-transform: uppercase;
+                    margin: 0 8px;
+                    padding: 8px 16px;
+                    text-decoration: none;
+                    color: #624949;
+                    font-family: 'LTSuperior', sans-serif;
+                    font-size: 15px;
+                    font-weight: 600;
+                    transition: 0.4s;
+                    z-index: 1;
+
+                    &::before,
+                    &::after {
+                        content: '';
+                        position: absolute;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        transition: 0.3s;
+                        opacity: 0;
+                    }
+
+                    &::before {
+                        top: 0;
+                        border-top: 2px solid #03268c;
+                        border-bottom: 2px solid #03268c;
+                        transform: scaleY(2);
+                    }
+
+                    &::after {
+                        top: 2px;
+                        background-color: #1d2fd3;
+                        transform: scale(0);
+                        z-index: -1;
+                    }
+
+                    &:hover {
+                        color: #1dafd3;
+
+                        &::before {
+                            transform: scaleY(1);
+                            opacity: 1;
+                        }
+
+                        &::after {
+                            transform: scale(1);
+                            opacity: 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-light bg-secondary mb-5 nav-custom">
+
+    <div class="container-fluid px-4">
+        <a class="navbar-brand text-center text-septimo fw-bold" style="font-size: 24px;">
+            <img id="logo" src="{% static 'img/Logo.png' %}" alt="Previsualización" class="d-block img-fluid"
+                style="max-width: 13vw;" data-preview-id="2">
+        </a>
+
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse " id="navbarSupportedContent">
+            <ul class="navbar-nav d-flex w-100 justify-content-between">
+
+                <li class="nav-item flex-fill text-center">
+                    <a class="nav-link active text-white fw-bold d-flex flex-column align-items-center fnBadComicRegular bg-secondary"
+                        style="font-size: 1.2vw;" href="{% url 'Index:index' %}">
+                        Inicio
+                    </a>
+                </li>
+                <li class="nav-item flex-fill text-center">
+                    <a class="nav-link active text-white fw-bold d-flex flex-column align-items-center fnBadComicRegular bg-secondary"
+                        style="font-size: 1.2vw;" href="{% url 'Index:index' %}">
+                        Encuestas activas
+                    </a>
+                </li>
+
+                {% if request.user.is_authenticated %}
+
+                <li class="nav-item flex-fill text-center">
+                    <a class="nav-link active text-white fw-bold d-flex flex-column align-items-center fnBadComicRegular bg-septimo"
+                        style="font-size: 1.2vw; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        Logout
+                    </a>
+                </li>
+
+                <!-- Modal de Confirmación -->
+                <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-secondary text-white">
+                                <h5 class="modal-title" id="logoutModalLabel">¿Confirmar cierre de sesión?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                ¿Estás seguro de que deseas cerrar sesión, <strong>{{ request.user }}</strong>?
+                            </div>
+                            <div class="modal-footer justify-content-center">
+                                <button type="button" class="btn btn-secondary text-white"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <a href="{% url 'Login:LogoutPage' %}" class="btn btn-septimo">Cerrar Sesión</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% endif %}
+
+
+            </ul>
+        </div>
+    </div>
+</nav>

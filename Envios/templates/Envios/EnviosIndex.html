@@ -1,0 +1,75 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+<style>
+    td {
+        vertical-align: middle;
+        height: 60px;
+    }
+
+    .paginar {
+        cursor: pointer;
+    }
+</style>
+<div class="container flex-grow-1">
+    <div class="row">
+        <div class="col-12 border-bottom border-primary border-3 mb-3">
+            Listado de prospectos seleccionados para envio
+        </div>
+    </div>
+</div>
+
+<div class="container flex-grow-1">
+    <div class="row" id="resultados-expedientes">
+        {% include 'Envios/tablaEnvios.html' %}
+    </div>
+    <div class="col-12 text-center">
+        <a href="{% url 'Envios:mandarCorreos' %}" class="btn btn-tercero text-white">Enviar a los prospectos</a>
+    </div>
+</div>
+
+<script>
+    function ejecutarFiltro(page = 1) {
+        $.ajax({
+            url: "{% url 'Envios:filtrarProspectos' %}",
+            type: 'GET',
+            data: { 'page': page },
+            success: function (response) {
+                $('#resultados-expedientes').html(response);
+            }
+        });
+    }
+
+    function checkmarck(id, checkbox) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        checkbox.disabled = true;
+
+        $.ajax({
+            url: "{% url 'Envios:checkmarckChange' %}",
+            type: 'POST',
+            data: {
+                'prospecto_id': id,
+                'checkmarck': checkbox.checked,
+                'csrfmiddlewaretoken': csrftoken
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    ejecutarFiltro(1);
+                }
+            },
+            error: function () {
+                checkbox.checked = !checkbox.checked;
+                checkbox.disabled = false;
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $(document).off('click', '.paginar').on('click', '.paginar', function (e) {
+            e.preventDefault();
+            ejecutarFiltro($(this).data('page'));
+        });
+    });
+</script>
+{% endblock %}

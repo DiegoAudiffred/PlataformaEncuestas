@@ -1,0 +1,75 @@
+{% load static %}
+
+<div class="col-lg-6 col-12 mb-4">
+
+    <a
+        class="card my-2 h-100 border border-3 border-secondary rounded rounded-4 shadow-lg overflow-hidden text-decoration-none survey-card {% if not encuesta.activa %}survey-disabled{% endif %}"
+        href="{% url 'Index:responderEncuesta' encuesta.id %}"
+    >
+
+        <div class="position-relative overflow-hidden">
+
+            {% if encuesta.imagen %}
+                <img
+                    src="{{ encuesta.imagen.url }}"
+                    alt="{{ encuesta.titulo }}"
+                    class="card-img-top survey-img"
+                    style="height: 220px; object-fit: cover;"
+                >
+            {% else %}
+                <img
+                    src="{% static 'img/noImage.webp' %}"
+                    alt="{{ encuesta.titulo }}"
+                    class="card-img-top survey-img"
+                    style="height: 220px; object-fit: cover;"
+                >
+            {% endif %}
+
+            <div class="position-absolute top-0 end-0 m-3">
+
+                {% if encuesta.activa %}
+                    <span class="badge bg-green shadow-sm status-pulse">
+                        Activa
+                    </span>
+                {% else %}
+                    <span class="badge bg-red shadow-sm">
+                        Inactiva
+                    </span>
+                {% endif %}
+
+            </div>
+
+            <div
+                class="position-absolute bottom-0 start-0 w-100 p-3 bg-dark bg-opacity-75 text-white {% if encuesta.activa %}bg-green{% endif %}"
+            >
+                <h2 class="h5 m-0 text-truncate">
+                    {{ encuesta.titulo }}
+                </h2>
+            </div>
+
+        </div>
+
+        <div class="card-body bg-white text-dark">
+            <p class="card-text text-muted text-truncate m-0">
+                {{ encuesta.descripcion }}
+            </p>
+        </div>
+
+        <div class="card-footer bg-light border-0 text-muted small d-flex justify-content-between align-items-center">
+
+            <span>
+                Fecha límite:
+                {{ encuesta.fechaVencimiento|date:"d/m/Y"|default:"Sin fecha" }}
+            </span>
+
+            {% if not encuesta.activa %}
+                <span class="text-danger fw-bold">
+                    Cerrada
+                </span>
+            {% endif %}
+
+        </div>
+
+    </a>
+
+</div>

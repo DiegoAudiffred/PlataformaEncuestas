@@ -1,0 +1,153 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-6 col-12">
+            <h1 class="fnSuperiorRegularTitle2 text-septimo">Panel de Usuarios</h1>
+
+        </div>
+        <div class="col-lg-2 col-6 my-auto">
+                <a class="btn btn-tercero rounded rounded-pill px-3 w-100 text-white {% if request.user.roles == 'Administrador' %}{% else %} disabled {% endif %}"
+                {% if request.user.roles == 'Administrador' %} href="{% url 'Administrador:editarMensajes' %}" {% else %}
+                onclick='alert("No tienes acceso a esto")' {% endif %}>Editar mensajes</a>
+
+        </div>
+        <div class="col-lg-2 col-6 my-auto">
+        
+            <button class="btn btn-septimo rounded rounded-pill px-3 w-100 text-white {% if request.user.roles == 'Administrador' %}{% else %} disabled {% endif %}"
+                data-bs-toggle="modal" data-bs-target="#userModal" {% if request.user.roles == 'Administrador' %} {% else
+                %} onclick='alert("No tienes acceso a esto")' {% endif %}>Crear Usuario</button>
+            {% if request.user.roles == 'Administrador' %}
+            <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+                <form action="{% url 'Administrador:altaUsuarios' %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-secondary">
+                                <h1 class="modal-title fs-5 " id="userModalLabel">Crear Nuevo Usuario</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger p-0 m-0 text-red" role="alert">
+                                    {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                {% for field in form %}
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% for error in field.errors %}
+                                    <div class="small text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary text-white"
+                                    data-bs-dismiss="modal">Cerrar</button>
+                                <button class="btn btn-tercero text-white" type="submit">Dar de alta</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-2 col-6 my-auto">
+            <a {% if request.user.roles == 'Administrador' %} href="{% url 'admin:index' %}" {% else %}
+                onclick='alert("No tienes acceso a esto")' {% endif %}
+                class="btn btn-primary rounded rounded-pill px-3 w-100 text-white {% if request.user.roles == 'Administrador' %}{% else %} disabled {% endif %}">Admin</a>
+        </div>
+    </div>
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Último Login</th>
+                <th>Email</th>
+                <th>Estatus</th>
+                {% if request.user.roles == 'Administrador' %}
+                <th>Acciones</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in usuarios %}
+            <tr
+                class="{% if user.is_active %} {% if current_user_id == user.id %}  bg-tercero {% else %}  bg-primary {% endif %} {% else %} bg-corporateGray900 {% endif %}">
+                <td class="text-white fw-bold text-truncate">{{ user.username }} </td>
+                <td><span class="badge bg-septimo">{{ user.roles }}</span></td>
+
+                <td class="text-white fw-bold">
+                    {% if user.last_login %}
+                    {{ user.last_login|date:"d M Y H:i" }}
+
+                    {% if user.last_login > "now"|date:"Y-m-d H:i"|add:"-60 minutes" and user.id != current_user_id %}
+                    <span class="badge bg-warning text-dark">Conectado (Reciente)</span>
+                    {% endif %}
+                    {% else %}
+                    Nunca
+                    {% endif %}
+                </td>
+                <td class="text-white fw-bold">
+                    {{ user.email }}</td>
+                <td class=" fw-bold 
+                    {% if user.is_active %}
+                    text-green
+                    {% else %}
+                    text-red
+                    {% endif %}">
+                    {% if user.is_active %}
+                    Activo
+                    {% else %}
+                    Inactivo
+                    {% endif %}
+                </td>
+                {% if request.user.roles == 'Administrador' %}
+
+                <td>
+                    <a href="{% url 'Administrador:editarUsuario' user.id %}"
+                        class="btn btn-sm btn-septimo me-2 text-white w-100 fw-bold border border-3 border-quinto">Editar</a>
+
+
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div>
+    <input type="text">
+</div>
+{% if show_modal_error %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var myModal = new bootstrap.Modal(document.getElementById('userModal'));
+        myModal.show();
+    });
+</script>
+{% endif %}
+
+{% endblock %}

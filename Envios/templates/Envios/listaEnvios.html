@@ -1,0 +1,34 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+<div class="container flex-grow-1">
+    <div class="row">
+        <div class="col-12 border-bottom border-primary border-3 mb-3 fnBubbleSansRegularXL">
+            Listado de envios al prospecto <span class="text-septimo">{{ prospecto.nombreCompleto }}</span>
+        </div>
+        <div class="col-12 text-start">
+            <table class="table table-striped">
+                <thead>
+                    <tr class="bg-primary text-white border border-3 border-septimo">
+
+                        <th>Fecha Envio</th>
+                        <th>Medio de Contacto</th>
+                        <th>Numero de Envio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for envio in envios %}
+                    <tr>
+                        <td>{{ envio.fecha_envio }}</td>
+                        <td>{{ envio.medioDeContacto }}</td>
+                        <td>{{ envio.numeroEnvio }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

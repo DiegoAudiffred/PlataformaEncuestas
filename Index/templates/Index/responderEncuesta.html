@@ -1,0 +1,472 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container py-4">
+
+    {% if error %}
+
+        <div class="card shadow-lg border-0">
+            <div class="card-body text-center p-5">
+
+                <div class="display-4 text-danger mb-3">
+                    ⚠
+                </div>
+
+                <h2 class="h4 mb-3">
+                    No puedes responder esta encuesta
+                </h2>
+
+                <p class="text-muted">
+                    {{ error }}
+                </p>
+
+                <a href="{% url 'Index:indexEncuestas' %}"
+                    class="btn btn-primary">
+                    Volver a encuestas
+                </a>
+
+            </div>
+        </div>
+
+    {% elif bloqueada %}
+
+        <div class="card shadow-lg border-0">
+
+            <div class="card-header bg-secondary text-white">
+                <h2 class="h4 mb-0">
+                    {{ encuesta.titulo }}
+                </h2>
+            </div>
+
+            <div class="card-body text-center p-5">
+
+                <div class="display-4 text-warning mb-3">
+                    ✓
+                </div>
+
+                <h2 class="h4">
+                    Ya completaste esta encuesta
+                </h2>
+
+                <p class="text-muted">
+                    Has utilizado los
+                    {{ intentos_realizados }}
+                    intentos disponibles.
+                </p>
+
+                {% if ultima_respuesta %}
+                    <div class="alert alert-info">
+
+                        <strong>
+                            Última puntuación:
+                        </strong>
+
+                        {{ ultima_respuesta.puntuacion }}
+                        puntos
+
+                    </div>
+                {% endif %}
+
+                <a
+                    href="{% url 'Index:indexEncuestas' %}"
+                    class="btn btn-primary">
+
+                    Volver a encuestas
+
+                </a>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="card shadow-lg border-0 mb-4">
+
+            <div class="card-header bg-primary text-white">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <h1 class="h3 mb-1">
+                            {{ encuesta.titulo }}
+                        </h1>
+
+                        {% if encuesta.descripcion %}
+                            <p class="mb-0">
+                                {{ encuesta.descripcion }}
+                            </p>
+                        {% endif %}
+
+                    </div>
+
+                    <div class="text-end">
+
+                        <div class="small">
+                            Intentos
+                        </div>
+
+                        <strong>
+                            {{ intentos_realizados }}
+                            /
+                            {{ encuesta.max_intentos }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% if encuesta.imagen %}
+
+                <div class="text-center bg-light p-3">
+
+                    <img
+                        src="{{ encuesta.imagen.url }}"
+                        class="img-fluid rounded"
+                        style="max-height: 300px; object-fit: cover;">
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <form
+            id="form-responder-encuesta"
+            method="POST"
+            enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+
+            {% for pregunta in preguntas %}
+
+                <div
+                    class="card shadow-sm border-0 mb-4">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+
+                            <div>
+
+                                <span class="badge bg-primary mb-2">
+                                    Pregunta {{ forloop.counter }}
+                                </span>
+
+                                <h2 class="h5 mb-0">
+                                    {{ pregunta.texto_pregunta }}
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        {% if pregunta.imagen %}
+
+                            <div class="mb-3 text-center">
+
+                                <img
+                                    src="{{ pregunta.imagen.url }}"
+                                    class="img-fluid rounded border"
+                                    style="max-height: 250px; object-fit: cover;">
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if pregunta.tipo == 'OPCION_MULTIPLE' %}
+
+                            <div>
+
+                                {% for opcion in pregunta.opciones.all %}
+
+                                    <div class="form-check border rounded p-3 mb-2">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="pregunta_{{ pregunta.id }}"
+                                            id="opcion_{{ opcion.id }}"
+                                            value="{{ opcion.id }}"
+                                            required>
+
+                                        <label
+                                            class="form-check-label w-100"
+                                            for="opcion_{{ opcion.id }}">
+
+                                            {{ opcion.texto_opcion }}
+
+                                        </label>
+
+                                    </div>
+
+                                {% empty %}
+
+                                    <div class="alert alert-warning">
+                                        Esta pregunta no tiene opciones disponibles.
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% elif pregunta.tipo == 'TEXTO' %}
+
+                            <textarea
+                                name="pregunta_{{ pregunta.id }}"
+                                class="form-control"
+                                rows="5"
+                                placeholder="Escribe tu respuesta..."
+                                required></textarea>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-body">
+
+                    <div class="alert alert-info mb-0">
+
+                        <div class="d-flex justify-content-between">
+
+                            <span>
+                                Intentos utilizados:
+                            </span>
+
+                            <strong>
+                                {{ intentos_realizados }}
+                                /
+                                {{ encuesta.max_intentos }}
+                            </strong>
+
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+
+                            <span>
+                                Intentos restantes:
+                            </span>
+
+                            <strong>
+                                {{ intentos_restantes }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="text-center mb-5">
+
+                <button
+                    type="submit"
+                    id="btn-enviar"
+                    class="btn btn-primary btn-lg px-5">
+
+                    Enviar respuestas
+
+                </button>
+
+            </div>
+
+        </form>
+
+    {% endif %}
+
+</div>
+
+
+<script>
+
+const form = document.getElementById(
+    'form-responder-encuesta'
+);
+
+if (form) {
+
+    form.addEventListener(
+        'submit',
+        function(e) {
+
+            e.preventDefault();
+
+            const boton =
+                document.getElementById(
+                    'btn-enviar'
+                );
+
+            if (
+                !confirm(
+                    '¿Estás seguro de enviar tus respuestas? Este envío contará como un intento.'
+                )
+            ) {
+                return;
+            }
+
+            boton.disabled = true;
+
+            boton.innerText =
+                'Enviando...';
+
+
+            const formData =
+                new FormData(form);
+
+
+            fetch(
+                "",
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    }
+                }
+            )
+            .then(
+                response =>
+                    response.json()
+            )
+            .then(
+                data => {
+
+                    if (
+                        data.status ===
+                        'success'
+                    ) {
+
+                        document.querySelector(
+                            '.container'
+                        ).innerHTML = `
+
+                            <div class="card shadow-lg border-0">
+
+                                <div class="card-header bg-success text-white text-center">
+
+                                    <h2 class="h4 mb-0">
+                                        Encuesta completada
+                                    </h2>
+
+                                </div>
+
+                                <div class="card-body text-center p-5">
+
+                                    <div class="display-4 text-success mb-3">
+                                        ✓
+                                    </div>
+
+                                    <h3 class="h4 mb-3">
+                                        ¡Gracias por responder!
+                                    </h3>
+
+                                    <p class="text-muted">
+                                        Tu respuesta fue registrada correctamente.
+                                    </p>
+
+                                    <div class="alert alert-info">
+
+                                        <div>
+                                            <strong>
+                                                Intento:
+                                            </strong>
+
+                                            ${data.intento}
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                Puntuación:
+                                            </strong>
+
+                                            ${data.puntuacion}
+                                            puntos
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                Intentos restantes:
+                                            </strong>
+
+                                            ${data.intentos_restantes}
+                                        </div>
+
+                                    </div>
+
+                                    <a
+                                        href="{% url 'Index:indexEncuestas' %}"
+                                        class="btn btn-primary">
+
+                                        Volver a encuestas
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        `;
+
+                    } else {
+
+                        alert(
+                            data.mensaje ||
+                            'Ocurrió un error.'
+                        );
+
+                        boton.disabled = false;
+
+                        boton.innerText =
+                            'Enviar respuestas';
+
+                    }
+
+                }
+            )
+            .catch(
+                error => {
+
+                    console.error(
+                        error
+                    );
+
+                    alert(
+                        'Ocurrió un error al enviar la encuesta.'
+                    );
+
+                    boton.disabled = false;
+
+                    boton.innerText =
+                        'Enviar respuestas';
+
+                }
+            );
+
+        }
+    );
+
+}
+
+</script>
+
+{% endblock %}

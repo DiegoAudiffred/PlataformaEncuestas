@@ -1,0 +1,1322 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container py-4">
+
+    <!-- ENCABEZADO DE LA ENCUESTA -->
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+            <div>
+                <h2 class="h4 mb-1" id="titulo-encuesta">
+                    {{ encuesta.titulo }}
+                </h2>
+
+                <div class="small" id="descripcion-encuesta">
+                    {{ encuesta.descripcion }}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="btn btn-white"
+                data-bs-toggle="modal"
+                data-bs-target="#modal-editar-encuesta">
+                Editar Encuesta
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="row">
+
+        <!-- FORMULARIO DE PREGUNTA -->
+        <div class="col-md-5">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+                    <h3 class="h5 mb-0" id="form-title">
+                        Agregar Pregunta a {{ encuesta.titulo }}
+                    </h3>
+
+                    <button
+                        type="button"
+                        id="btn-cancel-edit"
+                        class="btn btn-sm btn-light d-none"
+                        onclick="resetFormToCreate()">
+                        Cancelar Edición
+                    </button>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form
+                        id="form-pregunta"
+                        method="POST"
+                        enctype="multipart/form-data">
+
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="pregunta_id"
+                            id="pregunta_id"
+                            value="">
+
+                        <div class="mb-3">
+                            {{ form.texto_pregunta }}
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">
+                                Tipo de respuesta esperada
+                            </label>
+
+                            {{ form.tipo }}
+
+                        </div>
+
+                        <div id="seccion-opciones" class="mb-3">
+
+                            <label class="form-label fw-bold">
+                                Opciones de Respuesta
+                            </label>
+
+                            <div id="contenedor-opciones">
+
+                                <div
+                                    class="input-group mb-2 option-row"
+                                    data-index="0">
+
+                                    <div class="input-group-text">
+
+                                        <input
+                                            class="form-check-input mt-0"
+                                            type="checkbox"
+                                            name="es_correcta[]"
+                                            value="0"
+                                            title="¿Es correcta?">
+
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        name="opciones[]"
+                                        class="form-control"
+                                        placeholder="Opción 1">
+
+                                    <input
+                                        type="number"
+                                        name="puntos[]"
+                                        class="form-control"
+                                        style="max-width: 90px;"
+                                        placeholder="Pts"
+                                        value="0">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger remove-option"
+                                        onclick="removeOption(this)">
+                                        X
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-secondary w-100 mt-1"
+                                onclick="addOptionInput()">
+                                + Agregar Opción
+                            </button>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-bold">
+                                {{ form.imagen.label }}
+                            </label>
+
+                            {{ form.imagen }}
+
+                        </div>
+
+                        <div class="mb-3 text-center">
+
+                            <img
+                                id="question-preview"
+                                src="#"
+                                alt="Vista previa"
+                                class="img-fluid rounded d-none border border-2 border-primary"
+                                style="max-height: 180px; object-fit: cover;">
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            id="btn-submit-form"
+                            class="btn btn-primary w-100 fw-bold">
+                            Guardar Pregunta
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LISTA DE PREGUNTAS -->
+        <div class="col-md-7">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-secondary text-white">
+
+                    <h3 class="h5 mb-0">
+                        Preguntas de:
+                        {{ encuesta.titulo }}
+                    </h3>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div id="lista-preguntas">
+
+                        {% for pregunta in preguntas %}
+
+                        <div
+                            class="card mb-3 shadow-sm"
+                            id="pregunta-card-{{ pregunta.id }}"
+                            data-tipo="{{ pregunta.tipo }}"
+                            data-texto="{{ pregunta.texto_pregunta }}"
+                            data-imagen="{% if pregunta.imagen %}{{ pregunta.imagen.url }}{% endif %}">
+
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <h5
+                                        class="card-title mb-1"
+                                        id="title-text-{{ pregunta.id }}">
+
+                                        {{ pregunta.texto_pregunta }}
+
+                                    </h5>
+
+                                    <div>
+
+                                        <span
+                                            class="badge bg-info text-dark"
+                                            id="badge-tipo-{{ pregunta.id }}">
+
+                                            {{ pregunta.get_tipo_display }}
+
+                                        </span>
+
+                                        <button
+                                            class="btn btn-sm btn-outline-primary ms-2"
+                                            onclick="cargarEdicion('{{ pregunta.id }}')">
+                                            Editar
+                                        </button>
+
+                                        <button
+                                            class="btn btn-sm btn-outline-danger ms-1"
+                                            onclick="eliminarPregunta('{{ pregunta.id }}')">
+                                            X
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    id="container-img-{{ pregunta.id }}"
+                                    class="my-2 {% if not pregunta.imagen %}d-none{% endif %}">
+
+                                    <img
+                                        src="{% if pregunta.imagen %}{{ pregunta.imagen.url }}{% endif %}"
+                                        class="rounded border"
+                                        style="max-height: 100px; object-fit: cover;"
+                                        id="img-{{ pregunta.id }}">
+
+                                </div>
+
+
+                                <ul
+                                    class="list-group list-group-flush mt-2"
+                                    id="opciones-list-{{ pregunta.id }}">
+
+                                    {% for opcion in pregunta.opciones.all %}
+
+                                    <li
+                                        class="list-group-item py-1 d-flex justify-content-between align-items-center text-muted option-data-item"
+                                        data-texto="{{ opcion.texto_opcion }}"
+                                        data-puntos="{{ opcion.puntos }}"
+                                        data-correcta="{% if opcion.es_correcta %}true{% else %}false{% endif %}">
+
+                                        <span>
+
+                                            {% if opcion.es_correcta %}
+
+                                            <strong class="text-success">
+                                                ✓ {{ opcion.texto_opcion }}
+                                            </strong>
+
+                                            {% else %}
+
+                                            • {{ opcion.texto_opcion }}
+
+                                            {% endif %}
+
+                                        </span>
+
+                                        <span class="badge bg-secondary rounded-pill">
+                                            +{{ opcion.puntos }} pts
+                                        </span>
+
+                                    </li>
+
+                                    {% endfor %}
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                        {% empty %}
+
+                        <p
+                            class="text-center text-muted"
+                            id="empty-message">
+                            No hay preguntas creadas aún.
+                        </p>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- MODAL EDITAR ENCUESTA -->
+
+<div
+    class="modal fade"
+    id="modal-editar-encuesta"
+    tabindex="-1"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <form
+                id="form-editar-encuesta"
+                method="POST"
+                enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="editar_encuesta">
+
+                <div class="modal-header bg-primary text-white">
+
+                    <h5 class="modal-title">
+                        Editar Encuesta
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Título
+                        </label>
+
+                        {{ form_encuesta.titulo }}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Descripción
+                        </label>
+
+                        {{ form_encuesta.descripcion }}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Creador
+                        </label>
+
+                        {{ form_encuesta.creador }}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Fecha de vencimiento
+                        </label>
+
+                        {{ form_encuesta.fechaVencimiento }}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Imagen
+                        </label>
+
+                        {{ form_encuesta.imagen }}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <div class="form-check">
+
+                            {{ form_encuesta.activa }}
+
+                            <label class="form-check-label fw-bold">
+                                Encuesta activa
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Dirigido a
+                        </label>
+
+                        {{ form_encuesta.dirigido }}
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+                        Guardar Cambios
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const selectTipo = document.getElementById('id_tipo');
+const seccionOpciones = document.getElementById('seccion-opciones');
+const formPregunta = document.getElementById('form-pregunta');
+const imgInput = document.getElementById('id_imagen');
+const imgPreview = document.getElementById('question-preview');
+
+
+function toggleOpcionesVisibility() {
+
+    if (selectTipo.value === 'TEXTO') {
+        seccionOpciones.style.display = 'none';
+    } else {
+        seccionOpciones.style.display = 'block';
+    }
+
+}
+
+
+selectTipo.addEventListener(
+    'change',
+    toggleOpcionesVisibility
+);
+
+toggleOpcionesVisibility();
+
+
+if (imgInput) {
+
+    imgInput.addEventListener(
+        'change',
+        function (e) {
+
+            const [file] = e.target.files;
+
+            if (file) {
+
+                imgPreview.src =
+                    URL.createObjectURL(file);
+
+                imgPreview.classList.remove(
+                    'd-none'
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+function reindexOptions() {
+
+    const rows = document.querySelectorAll(
+        '#contenedor-opciones .option-row'
+    );
+
+    rows.forEach((row, index) => {
+
+        row.setAttribute(
+            'data-index',
+            index
+        );
+
+        const checkbox =
+            row.querySelector(
+                'input[type="checkbox"]'
+            );
+
+        const textInput =
+            row.querySelector(
+                'input[name="opciones[]"]'
+            );
+
+        checkbox.value = index;
+
+        if (textInput) {
+            textInput.placeholder =
+                `Opción ${index + 1}`;
+        }
+
+    });
+
+}
+
+
+function addOptionInput(
+    texto = '',
+    puntos = 0,
+    esCorrecta = false
+) {
+
+    const contenedor =
+        document.getElementById(
+            'contenedor-opciones'
+        );
+
+    const count =
+        contenedor.children.length;
+
+    const div =
+        document.createElement('div');
+
+    div.className =
+        'input-group mb-2 option-row';
+
+    div.setAttribute(
+        'data-index',
+        count
+    );
+
+    div.innerHTML = `
+        <div class="input-group-text">
+            <input
+                class="form-check-input mt-0"
+                type="checkbox"
+                name="es_correcta[]"
+                value="${count}"
+                ${esCorrecta ? 'checked' : ''}
+                title="¿Es correcta?">
+        </div>
+
+        <input
+            type="text"
+            name="opciones[]"
+            class="form-control"
+            placeholder="Opción ${count + 1}"
+            value="${texto}">
+
+        <input
+            type="number"
+            name="puntos[]"
+            class="form-control"
+            style="max-width: 90px;"
+            placeholder="Pts"
+            value="${puntos}">
+
+        <button
+            type="button"
+            class="btn btn-outline-danger remove-option"
+            onclick="removeOption(this)">
+            X
+        </button>
+    `;
+
+    contenedor.appendChild(div);
+
+}
+
+
+function removeOption(btn) {
+
+    const contenedor =
+        document.getElementById(
+            'contenedor-opciones'
+        );
+
+    if (contenedor.children.length > 1) {
+
+        btn.closest(
+            '.option-row'
+        ).remove();
+
+        reindexOptions();
+
+    }
+
+}
+
+
+function resetFormToCreate() {
+
+    formPregunta.reset();
+
+    document.getElementById(
+        'pregunta_id'
+    ).value = '';
+
+    document.getElementById(
+        'form-title'
+    ).innerText =
+        "Agregar Pregunta a {{ encuesta.titulo }}";
+
+    document.getElementById(
+        'btn-submit-form'
+    ).innerText =
+        "Guardar Pregunta";
+
+    document.getElementById(
+        'btn-cancel-edit'
+    ).classList.add('d-none');
+
+    imgPreview.src = '#';
+
+    imgPreview.classList.add(
+        'd-none'
+    );
+
+    document.getElementById(
+        'contenedor-opciones'
+    ).innerHTML = '';
+
+    addOptionInput(
+        '',
+        0,
+        false
+    );
+
+    toggleOpcionesVisibility();
+
+}
+
+
+function cargarEdicion(id) {
+
+    const card =
+        document.getElementById(
+            `pregunta-card-${id}`
+        );
+
+    const texto =
+        card.getAttribute(
+            'data-texto'
+        );
+
+    const tipo =
+        card.getAttribute(
+            'data-tipo'
+        );
+
+    const imagenUrl =
+        card.getAttribute(
+            'data-imagen'
+        );
+
+
+    document.getElementById(
+        'pregunta_id'
+    ).value = id;
+
+    document.getElementById(
+        'id_texto_pregunta'
+    ).value = texto;
+
+    document.getElementById(
+        'id_tipo'
+    ).value = tipo;
+
+
+    document.getElementById(
+        'form-title'
+    ).innerText =
+        "Editar Pregunta";
+
+    document.getElementById(
+        'btn-submit-form'
+    ).innerText =
+        "Actualizar Pregunta";
+
+    document.getElementById(
+        'btn-cancel-edit'
+    ).classList.remove(
+        'd-none'
+    );
+
+
+    if (imagenUrl) {
+
+        imgPreview.src = imagenUrl;
+
+        imgPreview.classList.remove(
+            'd-none'
+        );
+
+    } else {
+
+        imgPreview.src = '#';
+
+        imgPreview.classList.add(
+            'd-none'
+        );
+
+    }
+
+
+    const contenedor =
+        document.getElementById(
+            'contenedor-opciones'
+        );
+
+    contenedor.innerHTML = '';
+
+
+    const opcionesItems =
+        card.querySelectorAll(
+            '.option-data-item'
+        );
+
+
+    if (opcionesItems.length > 0) {
+
+        opcionesItems.forEach(
+            item => {
+
+                const optTexto =
+                    item.getAttribute(
+                        'data-texto'
+                    );
+
+                const optPts =
+                    item.getAttribute(
+                        'data-puntos'
+                    );
+
+                const optCorrecta =
+                    item.getAttribute(
+                        'data-correcta'
+                    ) === 'true';
+
+                addOptionInput(
+                    optTexto,
+                    optPts,
+                    optCorrecta
+                );
+
+            }
+        );
+
+    } else {
+
+        addOptionInput(
+            '',
+            0,
+            false
+        );
+
+    }
+
+
+    toggleOpcionesVisibility();
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+
+}
+
+
+function eliminarPregunta(id) {
+
+    if (!confirm(
+        '¿Deseas eliminar esta pregunta?'
+    )) {
+        return;
+    }
+
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        'csrfmiddlewaretoken',
+        '{{ csrf_token }}'
+    );
+
+    formData.append(
+        'action',
+        'delete'
+    );
+
+    formData.append(
+        'pregunta_id',
+        id
+    );
+
+
+    fetch(
+        "",
+        {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With":
+                    "XMLHttpRequest"
+            }
+        }
+    )
+    .then(
+        res => res.json()
+    )
+    .then(
+        data => {
+
+            if (
+                data.status ===
+                'success'
+            ) {
+
+                const card =
+                    document.getElementById(
+                        `pregunta-card-${id}`
+                    );
+
+                if (card) {
+                    card.remove();
+                }
+
+
+                const lista =
+                    document.getElementById(
+                        'lista-preguntas'
+                    );
+
+                if (
+                    lista.children.length ===
+                    0
+                ) {
+
+                    lista.innerHTML =
+                        '<p class="text-center text-muted" id="empty-message">No hay preguntas creadas aún.</p>';
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+formPregunta.addEventListener(
+    'submit',
+    function (e) {
+
+        e.preventDefault();
+
+        const formData =
+            new FormData(this);
+
+        const emptyMessage =
+            document.getElementById(
+                'empty-message'
+            );
+
+
+        fetch(
+            "",
+            {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With":
+                        "XMLHttpRequest"
+                }
+            }
+        )
+        .then(
+            response => response.json()
+        )
+        .then(
+            data => {
+
+                if (
+                    data.status !==
+                    'success'
+                ) {
+
+                    alert(
+                        'Error al procesar la pregunta: ' +
+                        JSON.stringify(
+                            data.errors
+                        )
+                    );
+
+                    return;
+
+                }
+
+
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+
+
+                let opcionesHtml = '';
+
+
+                if (
+                    data.pregunta.opciones &&
+                    data.pregunta.opciones.length > 0
+                ) {
+
+                    data.pregunta.opciones.forEach(
+                        op => {
+
+                            const label =
+                                op.es_correcta
+                                    ? `<strong class="text-success">✓ ${op.texto}</strong>`
+                                    : `• ${op.texto}`;
+
+                            opcionesHtml += `
+                                <li
+                                    class="list-group-item py-1 d-flex justify-content-between align-items-center text-muted option-data-item"
+                                    data-texto="${op.texto}"
+                                    data-puntos="${op.puntos}"
+                                    data-correcta="${op.es_correcta}">
+
+                                    <span>
+                                        ${label}
+                                    </span>
+
+                                    <span class="badge bg-secondary rounded-pill">
+                                        +${op.puntos} pts
+                                    </span>
+
+                                </li>
+                            `;
+
+                        }
+                    );
+
+                }
+
+
+                if (data.is_edit) {
+
+                    const pId =
+                        data.pregunta.id;
+
+                    const card =
+                        document.getElementById(
+                            `pregunta-card-${pId}`
+                        );
+
+
+                    card.setAttribute(
+                        'data-texto',
+                        data.pregunta.texto
+                    );
+
+                    card.setAttribute(
+                        'data-tipo',
+                        data.pregunta.tipo_val
+                    );
+
+                    card.setAttribute(
+                        'data-imagen',
+                        data.pregunta.imagen_url || ''
+                    );
+
+
+                    document.getElementById(
+                        `title-text-${pId}`
+                    ).innerText =
+                        data.pregunta.texto;
+
+
+                    document.getElementById(
+                        `badge-tipo-${pId}`
+                    ).innerText =
+                        data.pregunta.tipo;
+
+
+                    document.getElementById(
+                        `opciones-list-${pId}`
+                    ).innerHTML =
+                        opcionesHtml;
+
+
+                    const imgContainer =
+                        document.getElementById(
+                            `container-img-${pId}`
+                        );
+
+                    const imgElem =
+                        document.getElementById(
+                            `img-${pId}`
+                        );
+
+
+                    if (
+                        data.pregunta.imagen_url
+                    ) {
+
+                        imgElem.src =
+                            data.pregunta.imagen_url;
+
+                        imgContainer.classList.remove(
+                            'd-none'
+                        );
+
+                    } else {
+
+                        imgContainer.classList.add(
+                            'd-none'
+                        );
+
+                    }
+
+                } else {
+
+                    const lista =
+                        document.getElementById(
+                            'lista-preguntas'
+                        );
+
+                    const newCard =
+                        document.createElement(
+                            'div'
+                        );
+
+
+                    newCard.className =
+                        'card mb-3 shadow-sm';
+
+                    newCard.id =
+                        `pregunta-card-${data.pregunta.id}`;
+
+
+                    newCard.setAttribute(
+                        'data-tipo',
+                        data.pregunta.tipo_val
+                    );
+
+                    newCard.setAttribute(
+                        'data-texto',
+                        data.pregunta.texto
+                    );
+
+                    newCard.setAttribute(
+                        'data-imagen',
+                        data.pregunta.imagen_url || ''
+                    );
+
+
+                    let imageHtml =
+                        data.pregunta.imagen_url
+
+                            ? `
+                                <div
+                                    id="container-img-${data.pregunta.id}"
+                                    class="my-2">
+
+                                    <img
+                                        src="${data.pregunta.imagen_url}"
+                                        class="rounded border"
+                                        style="max-height: 100px; object-fit: cover;"
+                                        id="img-${data.pregunta.id}">
+
+                                </div>
+                            `
+
+                            : `
+                                <div
+                                    id="container-img-${data.pregunta.id}"
+                                    class="my-2 d-none">
+
+                                    <img
+                                        src=""
+                                        class="rounded border"
+                                        style="max-height: 100px; object-fit: cover;"
+                                        id="img-${data.pregunta.id}">
+
+                                </div>
+                            `;
+
+
+                    newCard.innerHTML = `
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <h5
+                                    class="card-title mb-1"
+                                    id="title-text-${data.pregunta.id}">
+
+                                    ${data.pregunta.texto}
+
+                                </h5>
+
+                                <div>
+
+                                    <span
+                                        class="badge bg-info text-dark"
+                                        id="badge-tipo-${data.pregunta.id}">
+
+                                        ${data.pregunta.tipo}
+
+                                    </span>
+
+                                    <button
+                                        class="btn btn-sm btn-outline-primary ms-2"
+                                        onclick="cargarEdicion('${data.pregunta.id}')">
+
+                                        Editar
+
+                                    </button>
+
+                                    <button
+                                        class="btn btn-sm btn-outline-danger ms-1"
+                                        onclick="eliminarPregunta('${data.pregunta.id}')">
+
+                                        X
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            ${imageHtml}
+
+                            <ul
+                                class="list-group list-group-flush mt-2"
+                                id="opciones-list-${data.pregunta.id}">
+
+                                ${opcionesHtml}
+
+                            </ul>
+
+                        </div>
+
+                    `;
+
+
+                    lista.appendChild(
+                        newCard
+                    );
+
+                }
+
+
+                resetFormToCreate();
+
+            }
+        )
+        .catch(
+            error =>
+                console.error(
+                    'Error:',
+                    error
+                )
+        );
+
+    }
+);
+
+
+/* EDITAR ENCUESTA */
+
+document
+    .getElementById('form-editar-encuesta')
+    .addEventListener(
+        'submit',
+        function (e) {
+
+            e.preventDefault();
+
+            const formData =
+                new FormData(this);
+
+
+            fetch(
+                "",
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    }
+                }
+            )
+            .then(
+                response =>
+                    response.json()
+            )
+            .then(
+                data => {
+
+                    if (
+                        data.status ===
+                        'success'
+                    ) {
+
+                        document.getElementById(
+                            'titulo-encuesta'
+                        ).innerText =
+                            data.encuesta.titulo;
+
+
+                        document.getElementById(
+                            'descripcion-encuesta'
+                        ).innerText =
+                            data.encuesta.descripcion;
+
+
+                        document.querySelector(
+                            '#form-title'
+                        ).innerText =
+                            `Agregar Pregunta a ${data.encuesta.titulo}`;
+
+
+                        document.querySelector(
+                            '.card-header h3.h5.mb-0'
+                        ).innerText =
+                            `Agregar Pregunta a ${data.encuesta.titulo}`;
+
+
+                        const modalElement =
+                            document.getElementById(
+                                'modal-editar-encuesta'
+                            );
+
+                        const modal =
+                            bootstrap.Modal.getInstance(
+                                modalElement
+                            );
+
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                    } else {
+
+                        alert(
+                            'Error al actualizar la encuesta: ' +
+                            JSON.stringify(
+                                data.errors
+                            )
+                        );
+
+                    }
+
+                }
+            )
+            .catch(
+                error =>
+                    console.error(
+                        'Error:',
+                        error
+                    )
+            );
+
+        }
+    );
+
+</script>
+
+{% endblock %}

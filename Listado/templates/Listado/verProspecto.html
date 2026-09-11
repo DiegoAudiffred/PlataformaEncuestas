@@ -1,0 +1,190 @@
+{% extends 'layout/layout.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Modificar Prospecto: {{ prospecto.nombreCompleto }}</h5>
+        </div>
+        <div class="card-body">
+           {% if request.user.roles == 'Administrador' or request.user.roles == 'Gerente' or request.user.roles == 'Analista'%}
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label font-weight-bold">Nombre Completo</label>
+                        {{ form.nombreCompleto }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo de Persona</label>
+                        {{ form.tipoPersona }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Captura</label>
+                        {{ form.fechaCapturado }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        {{ form.telefono }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        {{ form.ciudad }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección</label>
+                        {{ form.direccion }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Servicio de Interés</label>
+                        {{ form.servicioInteresado }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Medio de Contacto</label>
+                        {{ form.medioDeContacto }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Empresa</label>
+                        {{ form.empresa }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Monto Solicitado</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.montoSolicitado }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ejecutivo Asignado</label>
+                        {{ form.ejecutivoAsignado }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Comentarios</label>
+                        {{ form.comentario }}
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch mt-2">
+                            {{ form.checkmarck }}
+                            <label class="form-check-label">Seleccionado para envío </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end">
+                    <a href="{% url 'Listado:ListadoIndex' %}" class="btn btn-primary me-2 text-white">Cancelar</a>
+                    <button type="submit" class="btn btn-tercero text-white">Guardar Cambios</button>
+                </div>
+            </form>
+           {% else %}
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label font-weight-bold">Nombre Completo</label>
+                        <p class="form-control">                        {{ prospecto.nombreCompleto }}</p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo de Persona</label>
+                          <p class="form-control"> {{ prospecto.tipoPersona }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Captura</label>
+                         <p class="form-control">  {{ prospecto.fechaCapturado }} </p>
+                        
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                         <p class="form-control">   {{ prospecto.email }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                          <p class="form-control"> {{ prospecto.telefono }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        <p class="form-control">   {{ prospecto.ciudad }} </p>
+                        
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección</label>
+                          <p class="form-control">  {{ prospecto.direccion }} </p>
+                        
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Servicio de Interés</label>
+                       <p class="form-control">    {{ prospecto.servicioInteresado }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Medio de Contacto</label>
+                       <p class="form-control">    {{ prospecto.medioDeContacto }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Empresa</label>
+                         <p class="form-control">  {{ prospecto.empresa }} </p>
+                        
+                    </div>
+<div class="col-md-4">
+    <label class="form-label">Monto Solicitado</label>
+    <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input type="text" class="form-control" value="{{ prospecto.montoSolicitado }}" readonly>
+    </div>
+</div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                      <p class="form-control">     {{ prospecto.status }} </p>
+                        
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ejecutivo Asignado</label>
+                      <p class="form-control">     {{ prospecto.ejecutivoAsignado }} </p>
+                        
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Comentarios</label>
+                        {% if  prospecto.comentario %}
+                      <p class="form-control">     {{ prospecto.comentario }} </p>
+                        {% else %}
+                        <p class="form-control">Sin comentarios</p>
+                        {% endif %}
+                        
+                    </div>
+
+                   
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end">
+                    <a href="{% url 'Listado:prospectosAsignadosEjecutivo' %}" class="btn btn-primary me-2 text-white">Regresar</a>
+                </div>
+            </form>
+           {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

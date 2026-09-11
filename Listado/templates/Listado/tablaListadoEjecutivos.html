@@ -1,0 +1,165 @@
+<style>
+    .table-fixed {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+
+    .table-fixed th:nth-child(1) {
+        width: 200px;
+    }
+
+    .table-fixed th:nth-child(2) {
+        width: auto;
+    }
+
+    .table-fixed th:nth-child(3) {
+        width: 100px;
+    }
+
+    .table-fixed th:nth-child(4) {
+        width: 150px;
+    }
+
+    .table-fixed th:nth-child(5) {
+        width: 120px;
+    }
+
+    .table-fixed th:nth-child(6) {
+        width: 150px;
+    }
+
+    .table-fixed th:nth-child(7) {
+        width: 110px;
+    }
+
+
+ .table-fixed td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tabla-contenedor {
+        min-height: 660px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    /* Cambia tus selectores de ancho para que solo afecten a pantallas grandes */
+@media (min-width: 992px) {
+    .table-fixed {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .table-fixed th:nth-child(2) { width: 200px; }
+    /* ... el resto de tus th con px ... */
+}
+
+@media (max-width: 991px) {
+    .table-fixed {
+        table-layout: auto; /* Permite que las columnas se ajusten al contenido en móvil */
+        min-width: 800px;    /* Obliga a la tabla a mantener un ancho mínimo para que sea legible con scroll */
+    }
+    
+    .table-fixed td {
+        white-space: normal; /* Evita que el texto se corte con puntos suspensivos en móvil para que se pueda leer */
+        word-wrap: break-word;
+    }
+}
+
+</style>
+
+<div class="col-12 tabla-contenedor">
+    <div class="table-responsive"> <!-- Agrega esto -->
+        <table class="table table-striped table-fixed">
+            {% if registros %}
+            <thead>
+                <tr class="bg-primary text-white border border-3 border-septimo">
+                    <th>Fecha Capturado</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Medio Contacto</th>
+                    <th>Status</th>
+                    <th>Ejecutivo</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% csrf_token %}
+                {% for prospecto in registros %}
+                <tr class="border-bottom border-primary">
+
+                    <td>{{ prospecto.fechaCapturado }}</td>
+                    <td title="{{ prospecto.nombreCompleto }}">{{ prospecto.nombreCompleto }}</td>
+                    <td>{{ prospecto.tipoPersona }}</td>
+                    <td>{{ prospecto.medioDeContacto }}</td>
+                    <td>{{ prospecto.status }}</td>
+                    <td>{{ prospecto.ejecutivoAsignado|default:"Sin asignar" }}</td>
+                    <td>
+                        <a href="{% url 'Listado:verProspecto' prospecto.id %}"
+                            class="btn btn-sm bg-tercero text-white w-100">Ver más</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% else %}
+            <thead>
+                <tr>
+                    <th colspan="7" class="text-center">Sin registros</th>
+                </tr>
+            </thead>
+            {% endif %}
+        </table>
+    </div>
+
+    {% if paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-center mt-3" style="cursor: pointer;">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link paginar" data-page="{{ page_obj.previous_page_number }}">«</a>
+            </li>
+            {% endif %}
+
+            {% for i in paginator.page_range %}
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link paginar" data-page="{{ i }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link paginar" data-page="{{ page_obj.next_page_number }}">»</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function checkmarck(id, checkbox) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const params = {
+            'prospecto_id': id,
+            'checkmarck': checkbox.checked,
+            'csrfmiddlewaretoken': csrftoken
+        };
+
+        $.ajax({
+            url: "{% url 'Listado:checkmarckChange' %}",
+            type: 'POST',
+            data: params,
+            success: function (response) {
+                if (response.status === 'success') {
+                    console.log("Estado actualizado");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error AJAX:", error);
+            }
+        });
+    }
+</script>

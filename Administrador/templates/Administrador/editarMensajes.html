@@ -1,0 +1,325 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container flex-grow-1">
+    <div class="row">
+        <div class="col-10 border-bottom border-primary border-3 mb-3 fnBubbleSansRegularXL">
+            Listado de mensajes
+        </div>
+        <div class="col-2">
+            <button type="button" class="btn btn-primary text-white" data-bs-toggle="modal"
+                data-bs-target="#modalCrearMensaje">
+                Crear mensaje
+            </button>
+
+            <div class="modal fade" id="modalCrearMensaje" tabindex="-1" aria-labelledby="modalCrearLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalCrearLabel">Nuevo Mensaje</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post">
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                {{ form2.as_p }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-tercero">Visualizar</button>
+                                <button type="button" class="btn btn-cuarto" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary text-white">Guardar nuevo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion accordion-flush my-3" id="accordionFlushExample">
+
+            {% for item in mensajes_con_forms %}
+            <div class="accordion-item ">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed text-cuarto" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#flush-collapseOne{{ item.mensaje.id }}" aria-expanded="false"
+                        aria-controls="flush-collapseOne{{ item.mensaje.id }}">
+                        Respuesta de <span class="text-tercero mx-2">{{ item.mensaje.medioContacto }}</span> - contacto
+                        <span class="text-septimo mx-2"> {{item.mensaje.numEnvio }}
+                        </span> - Numero de preguntas:
+                        <span class="text-green mx-5">{{ item.mensaje.preguntas_set.count }}</span>
+                        </span>
+                    </button>
+                </h2>
+                <div id="flush-collapseOne{{ item.mensaje.id }}" class="accordion-collapse collapse"
+                    data-bs-parent="#accordionFlushExample">
+                    <div class="accordion-body border border-3 border-secondary rounded rounded-3">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="mensaje_id" value="{{ item.mensaje.id }}">
+                            {{ item.form.as_p }}
+
+
+                            <button type="button" class="btn btn-tercero" data-bs-toggle="modal"
+                                id="boton-preguntas-{{ item.mensaje.id }}"
+                                data-bs-target="#modalPreguntas{{ item.mensaje.id }}" data-bs-dismiss="modal">Ver
+                                preguntas </button>
+
+
+                            <button type="submit" class="btn btn-primary text-white">Actualizar</button>
+
+                            <div class="modal fade" id="modalPreguntas{{ item.mensaje.id }}" tabindex="-1"
+                                aria-labelledby="modalCrearLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-septimo">
+                                            <h5 class="modal-title text-white" id="modalCrearLabel">Preguntas de <span
+                                                    class="text-tercero mx-2">{{ item.mensaje.medioContacto }}</span> -
+                                                contacto
+                                                <span class="text-green mx-2"> {{item.mensaje.numEnvio }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <form method="post">
+                                            <div class="modal-body">
+                                                <div id="preguntas-container-{{ item.mensaje.id }}" class="mb-3">
+                                                    {% for p in item.preguntas %}
+                                                    <div id="pregunta-item-{{ p.id }}"
+                                                        class="alert alert-secondary p-2 mb-1 d-flex justify-content-between align-items-center w-100">
+                                                        <span class="text-break flex-grow-1 pr-3">
+                                                            {{ p.pregunta }}</span>
+
+                                                        <div class="d-flex gap-2 ml-3">
+                                                            <button type="button"
+                                                                class="btn btn-tercero btn-sm btn-open-respuestas"
+                                                                data-pregunta-id="{{ p.id }}">
+                                                                Respuestas
+                                                            </button>
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-sm btn-delete-pregunta"
+                                                                data-pregunta-id="{{ p.id }}">
+                                                                &times;
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    {% empty %}
+                                                    <p class="text-muted small no-preguntas">No hay preguntas para este
+                                                        mensaje.</p>
+                                                    {% endfor %}
+
+                                                </div>
+
+                                                <div class="input-group mb-3">
+                                                    <input type="text" id="input-pregunta-{{ item.mensaje.id }}"
+                                                        class="form-control" placeholder="Nueva pregunta...">
+                                                    <button class="btn btn-septimo text-white btn-add-pregunta"
+                                                        type="button" data-mensaje-id="{{ item.mensaje.id }}">
+                                                        Agregar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}
+            <div class="modal fade" id="modalRespuestas" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                <div class="modal-dialog modal-md shadow-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-tercero text-white">
+                            <h6 class="modal-title">Configurar Respuestas</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="respuestas-container" class="mb-3">
+                                <!-- Dinámico -->
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <input type="hidden" id="current-pregunta-id">
+                                <input type="text" id="input-nueva-respuesta" class="form-control"
+                                    placeholder="Respuesta rápida...">
+                                <button class="btn btn-septimo text-white" id="btn-save-respuesta" type="button"> +
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <small class="text-muted">Los cambios se guardan automáticamente.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar Modal y elementos
+        const modalElement = document.getElementById('modalRespuestas');
+        const modalRespuestas = new bootstrap.Modal(modalElement);
+        const containerRespuestas = document.getElementById('respuestas-container');
+        const inputRespuesta = document.getElementById('input-nueva-respuesta');
+        const hiddenPreguntaId = document.getElementById('current-pregunta-id');
+
+        // 1. AGREGAR PREGUNTA (Solo una vez)
+        document.querySelectorAll('.btn-add-pregunta').forEach(boton => {
+            boton.addEventListener('click', function () {
+                const mensajeId = this.getAttribute('data-mensaje-id');
+                const input = document.getElementById(`input-pregunta-${mensajeId}`);
+                const container = document.getElementById(`preguntas-container-${mensajeId}`);
+                const preguntaTexto = input.value.trim();
+
+                if (!preguntaTexto) return;
+
+                const formData = new FormData();
+                formData.append('mensaje_id', mensajeId);
+                formData.append('pregunta', preguntaTexto);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+                fetch("{% url 'Administrador:editarMensajes' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const noPreguntas = container.querySelector('.no-preguntas');
+                            if (noPreguntas) noPreguntas.remove();
+
+                            const nuevaPreguntaDiv = document.createElement('div');
+                            nuevaPreguntaDiv.id = `pregunta-item-${data.id}`;
+                            nuevaPreguntaDiv.className = 'alert alert-secondary p-2 mb-1 d-flex justify-content-between align-items-center w-100';
+                            nuevaPreguntaDiv.innerHTML = `
+                        <span class="text-break p-2">${data.texto}</span>
+                        <div>
+                             <button type="button" class="btn btn-tercero btn-sm btn-open-respuestas" data-pregunta-id="${data.id}">
+                                Respuestas
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm btn-delete-pregunta" data-pregunta-id="${data.id}">
+                                &times;
+                            </button>
+                        </div>`;
+                            container.appendChild(nuevaPreguntaDiv);
+                            input.value = "";
+                        }
+                    });
+            });
+        });
+
+        // 2. BORRAR PREGUNTA (Delegación de eventos para elementos nuevos y viejos)
+        document.addEventListener('click', function (e) {
+            const boton = e.target.closest('.btn-delete-pregunta');
+            if (!boton) return;
+
+            const preguntaId = boton.getAttribute('data-pregunta-id');
+            const elementoPregunta = document.getElementById(`pregunta-item-${preguntaId}`);
+            if (!elementoPregunta) return;
+
+            const container = elementoPregunta.closest('[id^="preguntas-container-"]');
+            let url = "{% url 'Administrador:borrarPregunta' 0 %}".replace('0', preguntaId);
+
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        elementoPregunta.remove();
+                        if (container && container.querySelectorAll('.alert').length === 0) {
+                            container.innerHTML = '<p class="text-muted small no-preguntas">No hay preguntas para este mensaje.</p>';
+                        }
+                    }
+                });
+        });
+
+        // 3. ABRIR MODAL DE RESPUESTAS
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-open-respuestas');
+            if (!btn) return;
+
+            const preguntaId = btn.getAttribute('data-pregunta-id');
+            hiddenPreguntaId.value = preguntaId;
+            containerRespuestas.innerHTML = '<div class="text-center"><small>Cargando...</small></div>';
+
+            modalRespuestas.show();
+
+            fetch(`/Administrador/getRespuestas/${preguntaId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    containerRespuestas.innerHTML = '';
+                    if (data.respuestas.length === 0) {
+                        containerRespuestas.innerHTML = '<p class="text-muted small">Sin respuestas.</p>';
+                    }
+                    data.respuestas.forEach(r => {
+                        agregarRespuestaAlDOM(r.id, r.texto);
+                    });
+                });
+        });
+
+        // 4. GUARDAR RESPUESTA
+        document.getElementById('btn-save-respuesta').addEventListener('click', function () {
+            const texto = inputRespuesta.value.trim();
+            const preguntaId = hiddenPreguntaId.value;
+
+            if (!texto) return;
+
+            const formData = new FormData();
+            formData.append('pregunta_id', preguntaId);
+            formData.append('respuesta', texto);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch("{% url 'Administrador:agregarRespuesta' %}", {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const emptyMsg = containerRespuestas.querySelector('p');
+                        if (emptyMsg) emptyMsg.remove();
+                        agregarRespuestaAlDOM(data.id, data.texto);
+                        inputRespuesta.value = '';
+                    }
+                });
+        });
+
+        function agregarRespuestaAlDOM(id, texto) {
+            const div = document.createElement('div');
+            div.className = 'badge bg-light text-tercero border p-2 mb-1 d-flex justify-content-between w-100';
+            div.innerHTML = `<span>${texto}</span><span class="text-danger pointer ml-2" onclick="borrarRespuesta(${id}, this)">&times;</span>`;
+            containerRespuestas.appendChild(div);
+        }
+    });
+
+    // Función global para borrar respuesta (fuera del DOMContentLoaded para que el onclick la encuentre)
+    function borrarRespuesta(id, elemento) {
+        if (!confirm('¿Borrar respuesta?')) return;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch(`/Administrador/borrarRespuesta/${id}/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(() => elemento.parentElement.remove());
+    }
+</script>
+{% endblock %}

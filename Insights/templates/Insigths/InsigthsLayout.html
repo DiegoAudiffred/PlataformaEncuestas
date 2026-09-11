@@ -1,0 +1,16 @@
+{% extends 'layout/layout.html' %}
+
+{% load static %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            {% for p in ejecutivos %}
+            {% include 'Insigths/ejectuvioCard.html' %}
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+{% endblock %}

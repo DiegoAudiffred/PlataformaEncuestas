@@ -1,0 +1,263 @@
+//Colors
+$primary: #132aad;
+$secondary: #66c1d3;
+$tercero: #711bda;
+$cuarto: #3f2b56;
+$quinto: #081420; 
+$sexto: #70798b;
+$septimo: #367ad2;
+$green : #1bd52d;
+$red : #d54017;
+$yellow: #ddb608;
+$corporateNavyBlue900: #19263F;
+$corporateNavyBlue800: #303C52;
+$corporateNavyBlue700: #475165;
+$corporateNavyBlue600: #5E6778; 
+$corporateNavyBlue500: #757C8B;
+$corporateNavyBlue400: #8C929F;
+$corporateNavyBlue300: #A3A9B2; 
+$corporateNavyBlue200: #BABEC5;
+$corporateNavyBlue100: #D1D4D9;
+$corporateNavyBlue50: #E8E9EC; 
+$corporateOrange900: #F56800; 
+$corporateOrange800: #F6771A;
+$corporateOrange700: #F78633;
+$corporateOrange600: #F8954D;
+$corporateOrange500: #F9A466;
+$corporateOrange400: #FAB380;
+$corporateOrange300: #FBC39A;
+$corporateOrange200: #FCD1B3;
+$corporateOrange100: #FDE1CD;
+$corporateOrange50: #FEF0E6;
+$corporateGray900: #9C9B9B;
+$corporateGray800: #A4A2A2;
+$corporateGray700: #AEADAD;
+$corporateGray600: #B8B7B7;
+$corporateGray500: #C2C1C1;
+$corporateGray400: #CDCBCB;
+$corporateGray300: #D7D5D5;
+$corporateGray200: #E1E0E0;
+$corporateGray100: #EBEAEA;
+$corporateGray50: #F5F5F5;
+$corporateYellow900: #F4A20A;
+$corporateYellow800: #F5AB22;
+$corporateYellow700: #F6B43B;
+$corporateYellow600: #F7BE53;
+$corporateYellow500: #F8C76C;
+$corporateYellow400: #F9D084;
+$corporateYellow300: #FADA9D;
+$corporateYellow200: #FADA9D;
+$corporateYellow100: #FCECCE;
+$corporateYellow50: #FDF5E6;
+$error: #D32F2F;
+$grayBorder: #CED4DA;
+$white: #FFFFFF;
+
+$theme-colors: (
+  "primary": $primary,
+  "secondary": $secondary,
+  "tercero": $tercero,
+  "cuarto": $cuarto,
+  "quinto": $quinto,
+  "sexto":$sexto,
+  "septimo": $septimo,
+  "green":$green,
+  "red":$red,
+  "yellow":$yellow,
+  "corporateNavyBlue800": $corporateNavyBlue800,
+  "corporateNavyBlue900": $corporateNavyBlue900,
+  "corporateNavyBlue700": $corporateNavyBlue700,
+  "corporateNavyBlue600": $corporateNavyBlue600,
+  "corporateNavyBlue500": $corporateNavyBlue500,
+  "corporateNavyBlue400": $corporateNavyBlue400,
+  "corporateNavyBlue300": $corporateNavyBlue300,
+  "corporateNavyBlue200": $corporateNavyBlue200,
+  "corporateNavyBlue100": $corporateNavyBlue100,
+  "corporateNavyBlue50": $corporateNavyBlue50,
+  "corporateOrange900": $corporateOrange900,
+  "corporateOrange800": $corporateOrange800,
+  "corporateOrange700": $corporateOrange700,
+  "corporateOrange600": $corporateOrange600,
+  "corporateOrange500": $corporateOrange500,
+  "corporateOrange400": $corporateOrange400,
+  "corporateOrange300": $corporateOrange300,
+  "corporateOrange200": $corporateOrange200,
+  "corporateOrange100": $corporateOrange100,
+  "corporateOrange50": $corporateOrange50,
+  "corporateGray900": $corporateGray900,
+  "corporateGray800": $corporateGray800,
+  "corporateGray700": $corporateGray700,
+  "corporateGray600": $corporateGray600,
+  "corporateGray500": $corporateGray500,
+  "corporateGray400": $corporateGray400,
+  "corporateGray300": $corporateGray300,
+  "corporateGray200": $corporateGray200,
+  "corporateGray100": $corporateGray100,
+  "corporateGray50": $corporateGray50,
+  "corporateYellow900": $corporateYellow900,
+  "corporateYellow800": $corporateYellow800,
+  "corporateYellow700": $corporateYellow700,
+  "corporateYellow600": $corporateYellow600,
+  "corporateYellow500": $corporateYellow500,
+  "corporateYellow400": $corporateYellow400,
+  "corporateYellow300": $corporateYellow300,
+  "corporateYellow200": $corporateYellow200,
+  "corporateYellow100": $corporateYellow100,
+  "corporateYellow50": $corporateYellow50,
+  "error": $error,
+  "grayBorder": $grayBorder,
+  "white": $white,
+);
+
+//Shadows 
+.orangeShadow {}
+
+.orangeShadow:hover {
+  box-shadow: 0px 2px 4px rgba(246, 135, 31, 0.13), 0px 12px 24px rgba(246, 135, 31, 0.33);
+}
+
+//Typography
+
+//Titles
+
+
+
+@font-face {
+  font-family: 'BadComic';
+  src: url('/static/fonts/BadComic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BubbleSans';
+  src: url('/static/fonts/BubbleSans-Regular.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+.fnBubbleSansRegularXL {
+  font-family: 'BubbleSans', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 30px;
+}
+
+.fnBubbleSansRegular {
+  font-family: 'BubbleSans', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.fnBadComicRegularXL {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 45px;
+}
+
+.fnBadComicRegular {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+// Estilo ligero (puede que se vea igual si la fuente no tiene variante light)
+.fnBadComicLight {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: 300; // Puede no cambiar si la fuente no tiene pesos definidos
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.fnBadComicBold {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.fnBadComicItalic {
+  font-family: 'BadComic', sans-serif;
+  font-style: italic;
+  font-weight: normal;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.fnBadComicTitle {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 1px;
+}
+
+.fnBadComicButton {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.fnBadComicSmall {
+  font-family: 'BadComic', sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  color: #555;
+}
+
+
+
+
+
+$form-select-color: $corporateGray900;
+$form-select-indicator-color: #ACACAC;
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.btn-outline-grayBorder:hover {
+  background-color: white !important;
+}
+
+.btn-outline-grayBorder:active {
+  background-color: white !important;
+}
+
+.btn-outline-grayBorder:visited {
+  background-color: white !important;
+}
+
+$carousel-control-color: $primary;
+$carousel-indicator-width: 6px;
+$carousel-indicator-height: 6px;
+$carousel-indicator-opacity: 1;
+$carousel-indicator-active-bg: $corporateGray200;
+
+.carousel-indicators [data-bs-target] {
+  border-radius: 100%;
+}
+
+@import "../bootstrap/scss/bootstrap.scss";

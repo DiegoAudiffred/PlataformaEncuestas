@@ -1,0 +1,168 @@
+<div class="card border-4 shadow-lg rounded-4 mb-4 p-3 border-primary rounded-4" id="filtros-prospectos"
+    data-url="{% url 'Listado:filtrarProspectos' %}">
+    <div class="card-body p-0">
+        <div class="row g-3 align-items-end">
+            <!-- Sección de Fechas -->
+            <div class="col-12 col-md-6 col-xl-2">
+                <label for="fecha-inicio-input"
+                    class="form-label small fw-bold text-quinto mb-1 text-uppercase">Desde</label>
+                <div class="input-group">
+                    <input type="date" id="fecha-inicio-input" name="fecha_inicio"
+                        class="form-control filtro-input border-2 border-tercero rounded-4 py-2 px-3">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-2">
+                <label for="fecha-fin-input"
+                    class="form-label small fw-bold text-quinto mb-1 text-uppercase">Hasta</label>
+                <div class="input-group">
+                    <input type="date" id="fecha-fin-input" name="fecha_fin"
+                        class="form-control filtro-input border-2 border-tercero rounded-4 py-2 px-3">
+                </div>
+            </div>
+
+            <!-- Búsqueda Principal -->
+            <div class="col-12 col-md-12 col-xl-5">
+                <label for="nombre-input" class="form-label small fw-bold text-quinto mb-1 text-uppercase">Búsqueda por
+                    Nombre</label>
+                <input type="text" id="nombre-input"
+                    class="form-control filtro-input border-2 border-tercero rounded-4 py-2 px-3"
+                    placeholder="Escribe un nombre...">
+            </div>
+
+            <!-- Selectores en Grid -->
+            <div class="col-6 col-md-4 col-xl-3">
+                <label for="tipo-select" class="form-label small fw-bold text-quinto mb-1 text-uppercase">Tipo</label>
+                <select name="usuarios" id="tipo-select"
+                    class="form-select filtro-input border-2 border-tercero rounded-4 py-2">
+                    <option value="0">Todos</option>
+                    <option value="1">Moral</option>
+                    <option value="2">Física</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-md-4 col-xl-3">
+                <label for="contacto-select"
+                    class="form-label small fw-bold text-quinto mb-1 text-uppercase">Vía</label>
+                <select name="usuarios" id="contacto-select"
+                    class="form-select filtro-input border-2 border-tercero rounded-4 py-2">
+                    <option value="0">Todas</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="llamada_telefónica">Llamada</option>
+                    <option value="correo_electrónico">Email</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-md-4 col-xl-3">
+                <label for="status-select"
+                    class="form-label small fw-bold text-quinto mb-1 text-uppercase">Estado</label>
+                <select name="usuarios" id="status-select"
+                    class="form-select filtro-input border-2 border-tercero rounded-4 py-2">
+                    <option value="0">Todos</option>
+                    <option value="NUEVO">Nuevo</option>
+                    <option value="ENVIADO">Enviado</option>
+                    <option value="RESPONDIO">Respondió</option>
+                    <option value="AUTORIZADO">Ok</option>
+                    <option value="RECHAZADO">No</option>
+                </select>
+            </div>
+
+            <div class="col-6 col-md-6 col-xl-3">
+                <label for="ejecutivo-select"
+                    class="form-label small fw-bold text-quinto mb-1 text-uppercase">Asesor</label>
+                <select name="usuarios" id="ejecutivo-select"
+                    class="form-select filtro-input border-2 border-tercero rounded-4 py-2">
+                    <option value="0">Todos</option>
+                    {% for ejecutivo in ejecutivos %}
+                    <option value="{{ ejecutivo.id }}">{{ ejecutivo.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botón de Acción -->
+            <div class="col-12 col-xl-3">
+                <button id="boton-reset-datos"
+                    class="btn btn-tercero w-100 rounded-4 py-2 fw-bold text-white shadow-sm border-2 border-tercero hover-effect shadow-sm">
+                    Limpiar
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        const filtrosContainer = document.getElementById('filtros-prospectos');
+
+        if (!filtrosContainer) return;
+
+        const filterUrl = filtrosContainer.dataset.url;
+
+        const fechaInicioInput = document.getElementById('fecha-inicio-input');
+        const fechaFinInput = document.getElementById('fecha-fin-input');
+        const nombreInput = document.getElementById('nombre-input');
+        const tipoSelect = document.getElementById('tipo-select');
+        const contactoSelect = document.getElementById('contacto-select');
+        const statusSelect = document.getElementById('status-select');
+        const ejecutivoSelect = document.getElementById('ejecutivo-select');
+        const botonReset = document.getElementById('boton-reset-datos');
+
+        function ejecutarFiltro(page = 1) {
+            const params = {
+                'fecha_inicio': fechaInicioInput.value,
+                'fecha_fin': fechaFinInput.value,
+                'nombre': nombreInput.value,
+                'tipo': tipoSelect.value,
+                'contacto': contactoSelect.value,
+                'status': statusSelect.value,
+                'ejecutivo': ejecutivoSelect.value,
+                'page': page
+            };
+
+            $.ajax({
+                url: filterUrl,
+                type: 'GET',
+                data: params,
+                success: function (response) {
+                    $('#resultados-expedientes').html(response);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error AJAX:", error);
+                }
+            });
+        }
+
+        function resetearFiltros() {
+            fechaInicioInput.value = "";
+            fechaFinInput.value = "";
+            nombreInput.value = "";
+            tipoSelect.value = "0";
+            contactoSelect.value = "0";
+            statusSelect.value = "0";
+            ejecutivoSelect.value = "0";
+            ejecutarFiltro(1);
+        }
+
+        [fechaInicioInput, fechaFinInput, tipoSelect, contactoSelect, statusSelect, ejecutivoSelect].forEach(elem => {
+            if (elem) elem.addEventListener('change', () => ejecutarFiltro(1));
+        });
+
+        let timeoutId;
+        if (nombreInput) {
+            nombreInput.addEventListener('input', function () {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => ejecutarFiltro(1), 300);
+            });
+        }
+
+        if (botonReset) botonReset.addEventListener('click', resetearFiltros);
+
+        $(document).on('click', '.paginar', function () {
+            const page = $(this).data('page');
+            ejecutarFiltro(page);
+        });
+
+        ejecutarFiltro(1);
+    });
+</script>

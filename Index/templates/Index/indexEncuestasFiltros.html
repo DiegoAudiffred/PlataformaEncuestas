@@ -1,0 +1,165 @@
+{% load static %}
+
+<div
+    id="Filters"
+    class="row d-flex align-items-end justify-content-end border border-3 rounded-4 shadow-lg border-primary my-3 p-3"
+    data-url="{% url 'Index:buscarEncuestas' %}"
+    style="background: linear-gradient(90deg, rgba(54, 122, 210, 1) 0%, rgba(102, 193, 211, 1) 50%, rgba(83, 178, 237, 1) 100%);"
+>
+
+    <div class="col-lg-3 col-md-4 col-12 mb-2">
+        <label for="Nombre" class="text-white pb-2">
+            Nombre de la encuesta
+        </label>
+
+        <input
+            type="text"
+            id="Nombre"
+            class="w-100 form-control border border-3 border-primary"
+            placeholder="Buscar por nombre"
+        >
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-12 mb-2">
+        <label for="Estados" class="text-white pb-2">
+            Estado
+        </label>
+
+        <select
+            id="Estados"
+            class="w-100 form-select border border-3 border-primary"
+        >
+            <option value="0" selected>Todas</option>
+            <option value="1">Activa</option>
+            <option value="2">Inactiva</option>
+        </select>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-12 mb-2">
+        <label for="Autor" class="text-white pb-2">
+            Autor
+        </label>
+
+        <select
+            id="Autor"
+            class="w-100 form-select border border-3 border-primary"
+        >
+            <option value="0" selected>Todos</option>
+
+            {% for a in creadoes %}
+                <option value="{{ a.id }}">
+                    {{ a.username }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-12 mb-2">
+        <button
+            type="button"
+            id="boton-reset-datos"
+            class="btn btn-secondary text-white w-100"
+        >
+            Reiniciar
+        </button>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+    const filtrosContainer = document.getElementById('Filters');
+
+    if (!filtrosContainer) return;
+
+    const filterUrl = filtrosContainer.dataset.url;
+
+    const nombreInput = document.getElementById('Nombre');
+    const estadosSelect = document.getElementById('Estados');
+    const autorSelect = document.getElementById('Autor');
+    const botonReset = document.getElementById('boton-reset-datos');
+
+    let timeoutId = null;
+    let currentRequest = null;
+
+    function ejecutarFiltro(page = 1) {
+
+        if (currentRequest !== null) {
+            currentRequest.abort();
+        }
+
+        const params = {
+            nombre: nombreInput.value,
+            estado: estadosSelect.value,
+            autor: autorSelect.value,
+            page: page
+        };
+
+        currentRequest = $.ajax({
+            url: filterUrl,
+            type: 'GET',
+            data: params,
+
+            success: function (response) {
+                $('#contenedorEncuestas').html(response);
+            },
+
+            error: function (xhr, status, error) {
+                if (status !== 'abort') {
+                    console.error('Error AJAX:', error);
+                }
+            },
+
+            complete: function () {
+                currentRequest = null;
+            }
+        });
+    }
+
+    function resetearFiltros() {
+        nombreInput.value = '';
+        estadosSelect.value = '0';
+        autorSelect.value = '0';
+
+        ejecutarFiltro(1);
+    }
+
+    estadosSelect.addEventListener('change', function () {
+        ejecutarFiltro(1);
+    });
+
+    autorSelect.addEventListener('change', function () {
+        ejecutarFiltro(1);
+    });
+
+    nombreInput.addEventListener('input', function () {
+
+        clearTimeout(timeoutId);
+
+        timeoutId = setTimeout(function () {
+            ejecutarFiltro(1);
+        }, 300);
+
+    });
+
+    if (botonReset) {
+        botonReset.addEventListener('click', function () {
+            resetearFiltros();
+        });
+    }
+
+    $(document).on('click', '.paginar', function () {
+
+        const page = $(this).data('page');
+
+        ejecutarFiltro(page);
+
+    });
+
+    ejecutarFiltro(1);
+
+});
+</script>

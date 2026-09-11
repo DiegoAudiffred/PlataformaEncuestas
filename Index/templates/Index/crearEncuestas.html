@@ -1,0 +1,124 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-1 border-primary rounded-3 shadow-lg">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h4 mb-0 fw-bold">Crea tu encuesta</h2>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.titulo.label }}
+                                </label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                <div class="text-danger small mt-1">{{ form.titulo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.descripcion.label }}
+                                </label>
+                                {{ form.descripcion }}
+                                {% if form.descripcion.errors %}
+                                <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.dirigido.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.dirigido.label }}
+                                </label>
+                                {{ form.dirigido }}
+                                {% if form.dirigido.errors %}
+                                <div class="text-danger small mt-1">{{ form.dirigido.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.creador.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.creador.label }}
+                                </label>
+                                <div class="form-control border border-3 border-primary my-1">
+                                    {{request.user.username}}
+                                </div>
+                                <!-- {{ form.creador }}
+                                {% if form.creador.errors %}
+                                <div class="text-danger small mt-1">{{ form.creador.errors.0 }}</div>
+                                {% endif %} -->
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.fechaVencimiento.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.fechaVencimiento.label }}
+                                </label>
+                                {{ form.fechaVencimiento }}
+                                {% if form.fechaVencimiento.errors %}
+                                <div class="text-danger small mt-1">{{ form.fechaVencimiento.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 d-flex flex-column justify-content-center">
+                                <label for="{{ form.imagen.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.imagen.label }}
+                                </label>
+                                {{ form.imagen }}
+                                {% if form.imagen.errors %}
+                                <div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 text-center">
+                                <label class="form-label fw-semibold d-block text-start">Vista previa</label>
+
+                                <img id="image-preview" src="{% static 'img/noImage.webp' %}" alt="Vista previa"
+                                    class="img-fluid rounded border shadow-sm w-100"
+                                    style="height: 200px; object-fit: cover;">
+                            </div>
+
+                            <div class="col-12 text-end pt-3 border-top mt-4">
+                                <a href="javascript:history.back()" class="btn btn-outline-secondary me-2">Cancelar</a>
+                                <button type="submit" class="btn btn-primary px-4 fw-semibold">Crear Encuesta</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const file = input.files[0];
+        const preview = document.getElementById('image-preview');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %}

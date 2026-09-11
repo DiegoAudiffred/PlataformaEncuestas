@@ -1,0 +1,78 @@
+{% for encuesta in encuestas %}
+
+    {% include 'Index/cardTemplate.html' %}
+
+{% empty %}
+
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            No se encontraron encuestas.
+        </div>
+    </div>
+
+{% endfor %}
+
+{% if encuestas.has_other_pages %}
+
+    <div class="col-12 mt-3">
+
+        <nav aria-label="Paginación de encuestas">
+
+            <ul class="pagination justify-content-center">
+
+                {% if encuestas.has_previous %}
+                    <li class="page-item">
+                        <button
+                            type="button"
+                            class="page-link paginar"
+                            data-page="{{ encuestas.previous_page_number }}">
+                            Anterior
+                        </button>
+                    </li>
+                {% endif %}
+
+                {% for num in encuestas.paginator.page_range %}
+
+                    {% if num == encuestas.number %}
+
+                        <li class="page-item active">
+                            <button
+                                type="button"
+                                class="page-link">
+                                {{ num }}
+                            </button>
+                        </li>
+
+                    {% else %}
+
+                        <li class="page-item">
+                            <button
+                                type="button"
+                                class="page-link paginar"
+                                data-page="{{ num }}">
+                                {{ num }}
+                            </button>
+                        </li>
+
+                    {% endif %}
+
+                {% endfor %}
+
+                {% if encuestas.has_next %}
+                    <li class="page-item">
+                        <button
+                            type="button"
+                            class="page-link paginar"
+                            data-page="{{ encuestas.next_page_number }}">
+                            Siguiente
+                        </button>
+                    </li>
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
+    </div>
+
+{% endif %}
