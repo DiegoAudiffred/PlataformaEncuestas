@@ -63,12 +63,6 @@
             this.els.selectTipo.addEventListener('change', () => this.toggleSeccion());
             this.els.form.addEventListener('submit', (e) => this.handleSubmit(e));
 
-            this.els.contenedorUsuarios.addEventListener('change', (e) => {
-                if (e.target.classList.contains('usuario-opcion-input')) {
-                    this.enforceUnicoUsuario(e.target);
-                }
-            });
-
             if (this.els.imgInput) {
                 this.els.imgInput.addEventListener('change', (e) => this.previewImage(e));
             }
@@ -86,29 +80,6 @@
 
             this.els.seccionOpciones.style.display = esOpciones ? 'block' : 'none';
             this.els.seccionUsuarios.classList.toggle('d-none', !esUsuario);
-
-            if (esUsuario) {
-                this.applyUnicoConstraint(tipo === 'USUARIO_UNICO');
-            }
-        },
-
-        applyUnicoConstraint(soloUno) {
-            const checks = this.els.contenedorUsuarios.querySelectorAll('.usuario-opcion-input');
-            if (!soloUno) return;
-            let seenChecked = false;
-            checks.forEach((c) => {
-                if (c.checked) {
-                    if (seenChecked) c.checked = false;
-                    seenChecked = true;
-                }
-            });
-        },
-
-        enforceUnicoUsuario(changedInput) {
-            if (this.els.selectTipo.value !== 'USUARIO_UNICO' || !changedInput.checked) return;
-            this.els.contenedorUsuarios.querySelectorAll('.usuario-opcion-input').forEach((c) => {
-                if (c !== changedInput) c.checked = false;
-            });
         },
 
         previewImage(e) {

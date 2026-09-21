@@ -1,0 +1,121 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="fnBadComicRegularXL">
+            {{ encuesta.titulo }}
+        </div>
+        <a href="{% url 'Index:encuestasContestadas' %}" class="btn btn-outline-secondary btn-sm">
+            &larr; Volver a mis respuestas
+        </a>
+    </div>
+
+    {% if encuesta.descripcion %}
+        <p class="text-muted">{{ encuesta.descripcion }}</p>
+    {% endif %}
+
+    <div class="accordion" id="acordeon-intentos">
+
+        {% for item in intentos %}
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+                    <button
+                        class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#intento-{{ item.respuesta.id }}"
+                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+
+                        Intento {{ item.respuesta.intento }}
+                        &nbsp;·&nbsp;
+                        {{ item.respuesta.fecha_respuesta|date:"d/m/Y H:i" }}
+                        &nbsp;·&nbsp;
+                        {{ item.respuesta.puntuacion }} pts
+
+                        {% if item.completa %}
+                            <span class="badge bg-green ms-2">Completa</span>
+                        {% else %}
+                            <span class="badge bg-yellow text-dark ms-2">Parcial</span>
+                        {% endif %}
+
+                    </button>
+                </h2>
+
+                <div
+                    id="intento-{{ item.respuesta.id }}"
+                    class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                    data-bs-parent="#acordeon-intentos">
+
+                    <div class="accordion-body">
+
+                        {% for fila in item.preguntas %}
+
+                            <div class="border rounded p-3 mb-2">
+
+                                <div class="fw-bold mb-1">
+                                    {{ forloop.counter }}. {{ fila.pregunta.texto_pregunta }}
+                                </div>
+
+                                {% if fila.detalle %}
+
+                                    {% if fila.pregunta.tipo == 'OPCION_MULTIPLE' %}
+                                        {% if fila.detalle.opcion_seleccionada %}
+                                            <div class="text-success">
+                                                ✓ {{ fila.detalle.opcion_seleccionada.texto_opcion }}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted fst-italic">
+                                                La opción elegida ya no existe (fue editada o eliminada).
+                                            </div>
+                                        {% endif %}
+
+                                    {% elif fila.pregunta.tipo == 'TEXTO' %}
+                                        <div class="text-dark">
+                                            {{ fila.detalle.texto_respuesta }}
+                                        </div>
+
+                                    {% elif fila.pregunta.tipo == 'USUARIO_UNICO' or fila.pregunta.tipo == 'USUARIO_MULTIPLE' %}
+                                        {% if fila.detalle.usuarios_seleccionados.all %}
+                                            <div>
+                                                {% for u in fila.detalle.usuarios_seleccionados.all %}
+                                                    <span class="badge bg-secondary me-1">
+                                                        👤 {{ u.nombre|default:u.username }}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted fst-italic">Sin respuesta</div>
+                                        {% endif %}
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <div class="text-muted fst-italic">
+                                        No respondiste esta pregunta.
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

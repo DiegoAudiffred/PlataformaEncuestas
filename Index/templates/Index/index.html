@@ -54,14 +54,15 @@
                 <img src="{% static 'img/respuestas.webp' %}"
                     class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" alt="Responder Encuestas">
                 <div class="position-absolute top-0 start-0 w-100 h-100 bg-tercero bg-opacity-50"></div>
-
-                <div class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-between p-4">
+   <a href="{% url 'Index:encuestasContestadas' %}"
+                    class="card-img-overlay bg-dark bg-opacity-50 d-flex flex-column justify-content-between p-4 text-decoration-none">
                     <div>
                         <h5 class="card-title fw-bold text-white mb-2">Mis respuestas</h5>
                         <p class="card-text text-white">Ve tus respuestas de encuestas contestadas.</p>
                     </div>
-                    <a href="" class="btn btn-primary w-100 rounded-3 fw-semibold shadow add">Ver</a>
-                </div>
+
+                </a>
+     
             </div>
         </div>
         <div class="col-md-6 col-lg-4">

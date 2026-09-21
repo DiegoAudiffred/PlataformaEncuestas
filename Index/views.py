@@ -167,9 +167,121 @@ def buscarEncuestasSelfUser(request):
     )
 
 
-@login_required(login_url='/login/')    
+@login_required(login_url='/login/')
 def encuestasContestadas(request):
-    return render(request, 'index/encuestasContestadas.html')
+    """
+    Encuestas en las que el usuario actual ya registró al menos una
+    respuesta, con el estado de su último intento (completo o no).
+    """
+
+    respuestas_qs = (
+        RespuestaEncuesta.objects
+        .filter(empleado=request.user)
+        .select_related('encuesta')
+        .prefetch_related('detalles')
+        .order_by('encuesta_id', '-intento')
+    )
+
+    resumen_por_encuesta = {}
+
+    for r in respuestas_qs:
+
+        if r.encuesta_id not in resumen_por_encuesta:
+
+            total_preguntas = r.encuesta.preguntas.count()
+            preguntas_respondidas = (
+                r.detalles.values('pregunta_id').distinct().count()
+            )
+
+            resumen_por_encuesta[r.encuesta_id] = {
+                'encuesta': r.encuesta,
+                'intentos_realizados': 0,
+                'ultimo_intento': r,
+                'completa': (
+                    total_preguntas > 0
+                    and preguntas_respondidas >= total_preguntas
+                ),
+            }
+
+        resumen_por_encuesta[r.encuesta_id]['intentos_realizados'] += 1
+
+    items = sorted(
+        resumen_por_encuesta.values(),
+        key=lambda item: item['encuesta'].id,
+        reverse=True
+    )
+
+    paginator = Paginator(items, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'Index/encuestasContestadas.html',
+        {'items': page_obj}
+    )
+
+
+@login_required(login_url='/login/')
+def verRespuestasEncuesta(request, id):
+    """
+    Detalle de TODOS los intentos que el usuario actual hizo sobre una
+    encuesta puntual: qué contestó en cada pregunta, intento por intento.
+    """
+
+    encuesta = get_object_or_404(Encuesta, id=id)
+
+    respuestas = (
+        RespuestaEncuesta.objects
+        .filter(encuesta=encuesta, empleado=request.user)
+        .prefetch_related(
+            'detalles__pregunta',
+            'detalles__opcion_seleccionada',
+            'detalles__usuarios_seleccionados',
+        )
+        .order_by('-intento')
+    )
+
+    if not respuestas.exists():
+        raise PermissionDenied('No tienes respuestas registradas en esta encuesta.')
+
+    preguntas = list(encuesta.preguntas.all())
+    total_preguntas = len(preguntas)
+
+    intentos = []
+
+    for r in respuestas:
+
+        detalles_por_pregunta = {
+            d.pregunta_id: d for d in r.detalles.all()
+        }
+
+        preguntas_resumen = []
+
+        for pregunta in preguntas:
+            preguntas_resumen.append({
+                'pregunta': pregunta,
+                'detalle': detalles_por_pregunta.get(pregunta.id),
+            })
+
+        intentos.append({
+            'respuesta': r,
+            'preguntas': preguntas_resumen,
+            'completa': (
+                total_preguntas > 0
+                and len(detalles_por_pregunta) >= total_preguntas
+            ),
+        })
+
+    return render(
+        request,
+        'Index/misRespuestas.html',
+        {
+            'encuesta': encuesta,
+            'intentos': intentos,
+        }
+    )
+
 
 @login_required(login_url='/login/')
 def crearEncuesta(request):
@@ -424,10 +536,11 @@ def editarEncuesta(request, id):
                 usuarios_validos = User.objects.filter(id__in=usuarios_ids)
                 pregunta.usuarios_opciones.set(usuarios_validos)
 
-                opciones_creadas = [
-                    {'id': u.id, 'texto': u.nombre or u.username}
-                    for u in usuarios_validos
-                ]
+                # 'opciones_creadas' se deja vacío a propósito: la lista de
+                # usuarios va SOLO en 'usuarios_opciones_payload' más abajo.
+                # Antes se llenaban ambas listas con los mismos usuarios y
+                # el frontend los pintaba dos veces en la tarjeta.
+                opciones_creadas = []
 
             image_url = pregunta.imagen.url if pregunta.imagen else None
 
@@ -464,9 +577,12 @@ def editarEncuesta(request, id):
         .all()
     )
 
-    # Todos los usuarios que la encuesta puede ofrecer como "opción de usuario".
-    # Por defecto: los usuarios a quienes está dirigida la encuesta.
-    usuarios_disponibles = encuesta.dirigido.all()
+    # Universo de usuarios que se puede ofrecer como opción de respuesta al
+    # crear una pregunta tipo "Selección de Usuario": TODOS los usuarios
+    # activos del sistema, no solo los dirigidos a esta encuesta (quien
+    # responde puede tener que elegir a cualquier compañero, no solo a
+    # quienes también fueron invitados a contestar).
+    usuarios_disponibles = User.objects.filter(is_active=True).order_by('username')
 
     return render(
         request,

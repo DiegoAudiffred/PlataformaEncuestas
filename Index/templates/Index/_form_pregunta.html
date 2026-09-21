@@ -59,8 +59,11 @@
                 </label>
 
                 <div class="form-text mb-2">
-                    Si no seleccionas ninguno, no se guardará la pregunta.
-                    Estos son los usuarios dirigidos a la encuesta.
+                    Selecciona a todas las personas que quieres ofrecer como
+                    opción de respuesta (quien responda la encuesta elegirá
+                    entre ellas). Puedes marcar tantas como quieras aquí — el
+                    tipo de pregunta (uno / varios) solo controla cuántas
+                    puede elegir quien responde, no cuántas ofreces tú.
                 </div>
 
                 <div
@@ -82,7 +85,7 @@
                     </div>
                     {% empty %}
                     <div class="text-muted small">
-                        Esta encuesta no está dirigida a ningún usuario todavía.
+                        No hay usuarios activos disponibles todavía.
                     </div>
                     {% endfor %}
 
