@@ -11,13 +11,14 @@ app_name = 'Index'
 urlpatterns = [
     path("", views.index, name='index'),
     path("encuestas/",views.indexEncuestas,name='indexEncuestas'),
-        path("encuestasUsuario/",views.encuestasUsuario,name='encuestasUsuario'),
-
+    path("encuestasUsuario/",views.encuestasUsuario,name='encuestasUsuario'),
+    path("encuestasUsuario2/",views.buscarEncuestasSelfUser,name='buscarEncuestasSelfUser'),
     path("encuestaContestada/",views.encuestasContestadas,name='encuestasContestadas'),
     path("encuestaCrear/",views.crearEncuesta,name='crearEncuesta'),
     path('buscarEncuestas/', views.buscarEncuestas, name='buscarEncuestas'),
     path("encuestasResultados/",views.encuestasResultados,name='encuestasResultados'),
-    path("encuestasPreguntas/<int:id>",views.encuestasPreguntas,name='encuestasPreguntas'),
+    path("editarEncuesta/<int:id>",views.editarEncuesta,name='editarEncuesta'),
+    path("enviarCorreoEncuesta/<int:encuesta_id>",views.enviarCorreoEncuesta,name='enviarCorreoEncuesta'),
     path("responderEncuesta/<int:id>",views.responderEncuesta,name='responderEncuesta'),
 
 

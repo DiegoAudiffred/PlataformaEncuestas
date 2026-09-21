@@ -4,7 +4,7 @@
 
     <a
         class="card my-2 h-100 border border-3 border-secondary rounded rounded-4 shadow-lg overflow-hidden text-decoration-none survey-card {% if not encuesta.activa %}survey-disabled{% endif %}"
-        href="{% url 'Index:responderEncuesta' encuesta.id %}"
+        href="{% url 'Index:editarEncuesta' encuesta.id %}"
     >
 
         <div class="position-relative overflow-hidden">
@@ -61,7 +61,6 @@
                 Fecha límite:
                 {{ encuesta.fechaVencimiento|date:"d/m/Y"|default:"Sin fecha" }}
             </span>
-            <span>Intentos realizados: {{ encuesta.intentos_realizados }} / {{ encuesta.maxIntentos }}</span>
 
             {% if not encuesta.activa %}
                 <span class="text-danger fw-bold">

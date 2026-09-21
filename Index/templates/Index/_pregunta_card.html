@@ -1,0 +1,86 @@
+<div
+    class="card mb-3 shadow-sm"
+    id="pregunta-card-{{ pregunta.id }}"
+    data-tipo="{{ pregunta.tipo }}"
+    data-texto="{{ pregunta.texto_pregunta }}"
+    data-imagen="{% if pregunta.imagen %}{{ pregunta.imagen.url }}{% endif %}">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="card-title mb-1" id="title-text-{{ pregunta.id }}">
+                {{ pregunta.texto_pregunta }}
+            </h5>
+
+            <div>
+                <span class="badge bg-info text-dark" id="badge-tipo-{{ pregunta.id }}">
+                    {{ pregunta.get_tipo_display }}
+                </span>
+
+                <button
+                    class="btn btn-sm btn-outline-primary ms-2"
+                    onclick="EncuestaForm.cargarEdicion('{{ pregunta.id }}')">
+                    Editar
+                </button>
+
+                <button
+                    class="btn btn-sm btn-outline-danger ms-1"
+                    onclick="PreguntaList.eliminar('{{ pregunta.id }}')">
+                    X
+                </button>
+            </div>
+
+        </div>
+
+        <div
+            id="container-img-{{ pregunta.id }}"
+            class="my-2 {% if not pregunta.imagen %}d-none{% endif %}">
+            <img
+                src="{% if pregunta.imagen %}{{ pregunta.imagen.url }}{% endif %}"
+                class="rounded border"
+                style="max-height: 100px; object-fit: cover;"
+                id="img-{{ pregunta.id }}">
+        </div>
+
+        <!-- Opciones de texto (OPCION_MULTIPLE) -->
+        <ul class="list-group list-group-flush mt-2" id="opciones-list-{{ pregunta.id }}">
+
+            {% for opcion in pregunta.opciones.all %}
+            <li
+                class="list-group-item py-1 d-flex justify-content-between align-items-center text-muted option-data-item"
+                data-id="{{ opcion.id }}"
+                data-texto="{{ opcion.texto_opcion }}"
+                data-puntos="{{ opcion.puntos }}"
+                data-correcta="{% if opcion.es_correcta %}true{% else %}false{% endif %}">
+
+                <span>
+                    {% if opcion.es_correcta %}
+                    <strong class="text-success">✓ {{ opcion.texto_opcion }}</strong>
+                    {% else %}
+                    • {{ opcion.texto_opcion }}
+                    {% endif %}
+                </span>
+
+                <span class="badge bg-secondary rounded-pill">+{{ opcion.puntos }} pts</span>
+            </li>
+            {% endfor %}
+
+        </ul>
+
+        <!-- Usuarios seleccionables (USUARIO_UNICO / USUARIO_MULTIPLE) -->
+        <ul class="list-group list-group-flush mt-2" id="usuarios-list-{{ pregunta.id }}">
+
+            {% for u in pregunta.usuarios_opciones.all %}
+            <li
+                class="list-group-item py-1 text-muted usuario-data-item"
+                data-id="{{ u.id }}">
+                👤 {{ u.nombre|default:u.username }}
+            </li>
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+</div>

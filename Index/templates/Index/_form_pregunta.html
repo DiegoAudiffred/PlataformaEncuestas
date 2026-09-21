@@ -1,0 +1,115 @@
+<!-- FORMULARIO DE PREGUNTA -->
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+        <h3 class="h5 mb-0" id="form-title">
+            Agregar Pregunta a {{ encuesta.titulo }}
+        </h3>
+
+        <button
+            type="button"
+            id="btn-cancel-edit"
+            class="btn btn-sm btn-light d-none"
+            onclick="EncuestaForm.resetToCreate()">
+            Cancelar Edición
+        </button>
+
+    </div>
+
+    <div class="card-body">
+
+        <form id="form-pregunta" method="POST" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <input type="hidden" name="action" value="guardar_pregunta">
+            <input type="hidden" name="pregunta_id" id="pregunta_id" value="">
+
+            <div class="mb-3">
+                {{ form.texto_pregunta }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tipo de respuesta esperada</label>
+                {{ form.tipo }}
+            </div>
+
+            <!-- Opciones de texto libre (solo OPCION_MULTIPLE) -->
+            <div id="seccion-opciones" class="mb-3">
+
+                <label class="form-label fw-bold">Opciones de Respuesta</label>
+
+                <div id="contenedor-opciones"></div>
+
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary w-100 mt-1"
+                    onclick="EncuestaForm.addOptionInput()">
+                    + Agregar Opción
+                </button>
+
+            </div>
+
+            <!-- Selección de usuarios (USUARIO_UNICO / USUARIO_MULTIPLE) -->
+            <div id="seccion-usuarios" class="mb-3 d-none">
+
+                <label class="form-label fw-bold">
+                    Usuarios que se podrán elegir como respuesta
+                </label>
+
+                <div class="form-text mb-2">
+                    Si no seleccionas ninguno, no se guardará la pregunta.
+                    Estos son los usuarios dirigidos a la encuesta.
+                </div>
+
+                <div
+                    id="contenedor-usuarios"
+                    class="border rounded p-2"
+                    style="max-height: 220px; overflow-y: auto;">
+
+                    {% for u in usuarios_disponibles %}
+                    <div class="form-check">
+                        <input
+                            class="form-check-input usuario-opcion-input"
+                            type="checkbox"
+                            name="usuarios_opciones[]"
+                            value="{{ u.id }}"
+                            id="usuario-opcion-{{ u.id }}">
+                        <label class="form-check-label" for="usuario-opcion-{{ u.id }}">
+                            {{ u.nombre|default:u.username }}
+                        </label>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted small">
+                        Esta encuesta no está dirigida a ningún usuario todavía.
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">{{ form.imagen.label }}</label>
+                {{ form.imagen }}
+            </div>
+
+            <div class="mb-3 text-center">
+                <img
+                    id="question-preview"
+                    src="#"
+                    alt="Vista previa"
+                    class="img-fluid rounded d-none border border-2 border-primary"
+                    style="max-height: 180px; object-fit: cover;">
+            </div>
+
+            <button type="submit" id="btn-submit-form" class="btn btn-primary w-100 fw-bold">
+                Guardar Pregunta
+            </button>
+
+        </form>
+
+    </div>
+
+</div>

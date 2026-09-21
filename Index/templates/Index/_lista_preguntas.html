@@ -1,0 +1,24 @@
+<!-- LISTA DE PREGUNTAS -->
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-secondary text-white">
+        <h3 class="h5 mb-0">Preguntas de: {{ encuesta.titulo }}</h3>
+    </div>
+
+    <div class="card-body">
+
+        <div id="lista-preguntas">
+
+            {% for pregunta in preguntas %}
+                {% include 'index/_pregunta_card.html' %}
+            {% empty %}
+                <p class="text-center text-muted" id="empty-message">
+                    No hay preguntas creadas aún.
+                </p>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>

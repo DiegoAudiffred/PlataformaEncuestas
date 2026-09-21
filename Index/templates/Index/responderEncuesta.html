@@ -112,7 +112,7 @@
                         <strong>
                             {{ intentos_realizados }}
                             /
-                            {{ encuesta.max_intentos }}
+                            {{ encuesta.maxIntentos }}
                         </strong>
 
                     </div>
@@ -228,6 +228,77 @@
                                 placeholder="Escribe tu respuesta..."
                                 required></textarea>
 
+                        {% elif pregunta.tipo == 'USUARIO_UNICO' %}
+
+                            <div>
+
+                                {% for u in pregunta.usuarios_opciones.all %}
+
+                                    <div class="form-check border rounded p-3 mb-2">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="pregunta_{{ pregunta.id }}"
+                                            id="usuario_{{ pregunta.id }}_{{ u.id }}"
+                                            value="{{ u.id }}"
+                                            required>
+
+                                        <label
+                                            class="form-check-label w-100"
+                                            for="usuario_{{ pregunta.id }}_{{ u.id }}">
+
+                                            {{ u.nombre|default:u.username }}
+
+                                        </label>
+
+                                    </div>
+
+                                {% empty %}
+
+                                    <div class="alert alert-warning">
+                                        Esta pregunta no tiene usuarios disponibles para elegir.
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% elif pregunta.tipo == 'USUARIO_MULTIPLE' %}
+
+                            <div>
+
+                                {% for u in pregunta.usuarios_opciones.all %}
+
+                                    <div class="form-check border rounded p-3 mb-2">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            name="pregunta_{{ pregunta.id }}[]"
+                                            id="usuario_{{ pregunta.id }}_{{ u.id }}"
+                                            value="{{ u.id }}">
+
+                                        <label
+                                            class="form-check-label w-100"
+                                            for="usuario_{{ pregunta.id }}_{{ u.id }}">
+
+                                            {{ u.nombre|default:u.username }}
+
+                                        </label>
+
+                                    </div>
+
+                                {% empty %}
+
+                                    <div class="alert alert-warning">
+                                        Esta pregunta no tiene usuarios disponibles para elegir.
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
                         {% endif %}
 
                     </div>
@@ -252,7 +323,7 @@
                             <strong>
                                 {{ intentos_realizados }}
                                 /
-                                {{ encuesta.max_intentos }}
+                                {{ encuesta.maxIntentos }}
                             </strong>
 
                         </div>

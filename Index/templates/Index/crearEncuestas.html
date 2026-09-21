@@ -45,7 +45,7 @@
 
                             <div class="col-md-6">
                                 <label for="{{ form.dirigido.id_for_label }}" class="form-label fw-semibold">
-                                    {{ form.dirigido.label }}
+                                    {{ form.dirigido.label }} (No seleccionar pondra a todos los usuarios)
                                 </label>
                                 {{ form.dirigido }}
                                 {% if form.dirigido.errors %}
@@ -83,6 +83,16 @@
                                 {{ form.imagen }}
                                 {% if form.imagen.errors %}
                                 <div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.maxIntentos.id_for_label }}" class="form-label fw-semibold">
+                                    {{ form.maxIntentos.label }}
+                                </label>
+                                {{ form.maxIntentos }}
+                                {% if form.maxIntentos.errors %}
+                                <div class="text-danger small mt-1">{{ form.maxIntentos.errors.0 }}</div>
                                 {% endif %}
                             </div>
 

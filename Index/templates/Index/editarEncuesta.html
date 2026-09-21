@@ -1,0 +1,22 @@
+{% extends 'layout/layout.html' %} 
+{% load static %} 
+{% block body %}
+{% include 'index/_encabezado_encuesta.html' %}
+{% include 'index/_form_pregunta.html' %}
+{% include 'index/_lista_preguntas.html' %}
+{% include 'index/_modal_editar_encuesta.html' %}
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+
+<script>
+    window.ENCUESTA_CONFIG = {
+        csrfToken: '{{ csrf_token }}',
+        postUrl: '',
+        tituloBase: '{{ encuesta.titulo|escapejs }}'
+    };
+</script>
+<script src="{% static 'js/editarEncuesta.js' %}"></script>
+
+{% endblock %}

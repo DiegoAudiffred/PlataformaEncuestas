@@ -1,0 +1,32 @@
+<!-- ENCABEZADO DE LA ENCUESTA -->
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+        <div>
+            <h2 class="h4 mb-1" id="titulo-encuesta">
+                {{ encuesta.titulo }}
+            </h2>
+
+            <div class="small" id="descripcion-encuesta">
+                {{ encuesta.descripcion }}
+            </div>
+        </div>
+        <div>
+               <button type="button" class="btn btn-secondary"     data-bs-toggle="modal"
+            data-bs-target="#modal-enviarCorreo"> Notificar usuarios
+                
+        </button>
+        
+        <button
+            type="button"
+            class="btn btn-white"
+            data-bs-toggle="modal"
+            data-bs-target="#modal-editar-encuesta">
+            Editar Encuesta
+        </button>
+        </div>
+
+    </div>
+
+</div>

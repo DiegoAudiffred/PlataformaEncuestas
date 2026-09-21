@@ -1,0 +1,108 @@
+<!-- MODAL EDITAR ENCUESTA -->
+
+<div class="modal fade" id="modal-editar-encuesta" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <form id="form-editar-encuesta" method="POST" enctype="multipart/form-data">
+
+                {% csrf_token %}
+                <input type="hidden" name="action" value="editar_encuesta">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar Encuesta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Título</label>
+                        {{ form_encuesta.titulo }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        {{ form_encuesta.descripcion }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Creador</label>
+                        {{ form_encuesta.creador }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de vencimiento</label>
+                        {{ form_encuesta.fechaVencimiento }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Imagen</label>
+                        {{ form_encuesta.imagen }}
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form_encuesta.activa }}
+                            <label class="form-check-label fw-bold">Encuesta activa</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Máximo de intentos</label>
+                        {{ form_encuesta.maxIntentos }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dirigido a</label>
+                        {{ form_encuesta.dirigido }}
+                        <div class="form-text">
+                            Si cambias esta lista, recuerda que las preguntas de tipo
+                            "Selección de Usuario" solo ofrecen como opción a los
+                            usuarios dirigidos aquí.
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="modal fade" id="modal-enviarCorreo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'Index:enviarCorreoEncuesta' encuesta.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar envío de correo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p>Se mandarán correos a los siguientes usuarios:</p>
+                    <ul>
+                        {% for usuario in encuesta.dirigido.all %}
+                            <li>{{ usuario.username }} ({{ usuario.email }})</li>
+                        {% empty %}
+                            <li>No hay usuarios asignados.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
