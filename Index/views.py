@@ -1,13 +1,14 @@
 import email
 from email.message import EmailMessage
 from email.mime.text import MIMEText
+import json
 import smtplib
 
 from django.contrib import messages
-from django.db.models import OuterRef, Subquery
+from django.db.models import Q, Avg, Max, Min, OuterRef, Subquery
 from django.db.models.aggregates import Count
 from django.db.models.functions import Coalesce
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import user_passes_test,login_required
 from Index.forms import *
@@ -858,3 +859,477 @@ def enviarCorreoEncuesta(request, encuesta_id):
         return redirect('Index:editarEncuesta', id=encuesta.id)
 
     return redirect('Index:indexEncuestas')
+
+
+"""
+Vistas para la sección "Resultados de mis encuestas".
+
+Requiere que ya tengas importado en tu views.py:
+    from django.db.models import Avg, Max, Min, Q
+    from django.db.models.aggregates import Count
+    from django.http import HttpResponse
+    from django.core.exceptions import PermissionDenied
+    from django.shortcuts import get_object_or_404, render
+
+Agrega también, si no los tienes ya:
+    import json
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+openpyxl no viene en Django por defecto: si no lo tienes instalado,
+`pip install openpyxl`.
+
+Usa los modelos Encuesta, Pregunta, OpcionRespuesta, RespuestaEncuesta,
+DetalleRespuesta y User — ya deberían estar disponibles en tu views.py via
+`from db.models import *`.
+
+Rutas a agregar en urls.py:
+    path("encuestasResultados/", views.encuestasResultados, name='encuestasResultados'),
+    path("encuestasResultados/<int:id>/", views.encuestaResultadoDetalle, name='encuestaResultadoDetalle'),
+    path("encuestasResultados/<int:id>/excel/", views.exportarResultadosExcel, name='exportarResultadosExcel'),
+    path("respuestaParticipante/<int:respuesta_id>/", views.verRespuestaParticipante, name='verRespuestaParticipante'),
+"""
+
+
+@login_required(login_url='/login/')
+def encuestasResultados(request):
+    """
+    Encuestas creadas por el usuario actual (o todas, si es staff/superuser),
+    con un resumen de participación para decidir a cuál entrar a analizar.
+    """
+
+    if request.user.is_staff or request.user.is_superuser:
+        encuestas = Encuesta.objects.all()
+    else:
+        encuestas = Encuesta.objects.filter(creador=request.user)
+
+    encuestas = encuestas.order_by('-id')
+
+    items = []
+
+    for encuesta in encuestas:
+
+        respuestas = RespuestaEncuesta.objects.filter(encuesta=encuesta)
+
+        agg = respuestas.aggregate(promedio=Avg('puntuacion'))
+
+        items.append({
+            'encuesta': encuesta,
+            'participantes': respuestas.values('empleado').distinct().count(),
+            'intentos_totales': respuestas.count(),
+            'total_preguntas': encuesta.preguntas.count(),
+            'promedio': (
+                round(agg['promedio'], 1)
+                if agg['promedio'] is not None
+                else None
+            ),
+            'tiene_puntaje': OpcionRespuesta.objects.filter(
+                pregunta__encuesta=encuesta, puntos__gt=0
+            ).exists(),
+        })
+
+    paginator = Paginator(items, 10)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    return render(
+        request,
+        'Index/encuestasResultados.html',
+        {'items': page_obj}
+    )
+
+
+@login_required(login_url='/login/')
+def encuestaResultadoDetalle(request, id):
+    """
+    Panel de análisis de una encuesta: participación, distribución de
+    respuestas por pregunta (incluye ranking de "más elegido" para las
+    preguntas de usuario) y puntuaciones, si la encuesta usa puntos.
+    """
+
+    encuesta = get_object_or_404(Encuesta, id=id)
+
+    if not encuesta.puede_editar(request.user):
+        raise PermissionDenied('No tienes permiso para ver los resultados de esta encuesta.')
+
+    respuestas = (
+        RespuestaEncuesta.objects
+        .filter(encuesta=encuesta)
+        .select_related('empleado')
+        .order_by('-fecha_respuesta')
+    )
+
+    total_participantes = respuestas.values('empleado').distinct().count()
+    agg_puntaje = respuestas.aggregate(
+        promedio=Avg('puntuacion'), maximo=Max('puntuacion'), minimo=Min('puntuacion')
+    )
+
+    tiene_puntaje = OpcionRespuesta.objects.filter(
+        pregunta__encuesta=encuesta, puntos__gt=0
+    ).exists()
+
+    preguntas = encuesta.preguntas.prefetch_related('opciones', 'usuarios_opciones').all()
+
+    analitica_preguntas = []
+
+    for pregunta in preguntas:
+
+        total_resp_pregunta = DetalleRespuesta.objects.filter(pregunta=pregunta).count()
+
+        if pregunta.tipo == 'OPCION_MULTIPLE':
+
+            data = []
+            for opcion in pregunta.opciones.all():
+                count = DetalleRespuesta.objects.filter(opcion_seleccionada=opcion).count()
+                pct = round(count / total_resp_pregunta * 100, 1) if total_resp_pregunta else 0
+                data.append({
+                    'etiqueta': opcion.texto_opcion,
+                    'puntos': opcion.puntos,
+                    'es_correcta': opcion.es_correcta,
+                    'count': count,
+                    'pct': pct,
+                })
+
+            analitica_preguntas.append({
+                'pregunta': pregunta, 'tipo': 'opciones',
+                'data': data, 'total': total_resp_pregunta,
+            })
+
+        elif pregunta.tipo in ('USUARIO_UNICO', 'USUARIO_MULTIPLE'):
+
+            ranking = (
+                User.objects
+                .filter(seleccionado_en_respuestas__pregunta=pregunta)
+                .annotate(votos=Count(
+                    'seleccionado_en_respuestas',
+                    filter=Q(seleccionado_en_respuestas__pregunta=pregunta)
+                ))
+                .order_by('-votos')
+            )
+
+            data = [
+                {
+                    'etiqueta': u.nombre or u.username,
+                    'count': u.votos,
+                    'pct': round(u.votos / total_resp_pregunta * 100, 1) if total_resp_pregunta else 0,
+                }
+                for u in ranking
+            ]
+
+            analitica_preguntas.append({
+                'pregunta': pregunta, 'tipo': 'usuarios',
+                'data': data, 'total': total_resp_pregunta,
+            })
+
+        else:  # TEXTO
+
+            respuestas_texto = (
+                DetalleRespuesta.objects
+                .filter(pregunta=pregunta)
+                .exclude(texto_respuesta__isnull=True)
+                .exclude(texto_respuesta__exact='')
+                .select_related('respuesta_encuesta__empleado')
+                .order_by('-respuesta_encuesta__fecha_respuesta')
+            )
+
+            analitica_preguntas.append({
+                'pregunta': pregunta, 'tipo': 'texto',
+                'data': respuestas_texto, 'total': total_resp_pregunta,
+            })
+
+    return render(
+        request,
+        'Index/encuestaResultadoDetalle.html',
+        {
+            'encuesta': encuesta,
+            'respuestas': respuestas,
+            'total_participantes': total_participantes,
+            'agg_puntaje': agg_puntaje,
+            'tiene_puntaje': tiene_puntaje,
+            'analitica_preguntas': analitica_preguntas,
+            'analitica_preguntas_json': json.dumps([
+                {
+                    'id': item['pregunta'].id,
+                    'labels': [fila['etiqueta'] for fila in item['data']],
+                    'valores': [fila['count'] for fila in item['data']],
+                }
+                for item in analitica_preguntas
+                if item['tipo'] in ('opciones', 'usuarios')
+            ]),
+        }
+    )
+
+
+@login_required(login_url='/login/')
+def verRespuestaParticipante(request, respuesta_id):
+    """
+    El detalle de UN intento específico de UN participante, para que el
+    creador de la encuesta (o staff) vea exactamente qué contestó.
+    """
+
+    respuesta = get_object_or_404(
+        RespuestaEncuesta.objects.select_related('encuesta', 'empleado'),
+        id=respuesta_id
+    )
+
+    encuesta = respuesta.encuesta
+
+    if not encuesta.puede_editar(request.user):
+        raise PermissionDenied('No tienes permiso para ver esta respuesta.')
+
+    detalles_por_pregunta = {
+        d.pregunta_id: d
+        for d in respuesta.detalles
+            .select_related('pregunta', 'opcion_seleccionada')
+            .prefetch_related('usuarios_seleccionados')
+    }
+
+    preguntas_resumen = []
+
+    for pregunta in encuesta.preguntas.all():
+        preguntas_resumen.append({
+            'pregunta': pregunta,
+            'detalle': detalles_por_pregunta.get(pregunta.id),
+        })
+
+    return render(
+        request,
+        'Index/verRespuestaParticipante.html',
+        {
+            'encuesta': encuesta,
+            'respuesta': respuesta,
+            'preguntas': preguntas_resumen,
+        }
+    )
+
+
+@login_required(login_url='/login/')
+def exportarResultadosExcel(request, id):
+    """
+    Descarga en .xlsx los resultados de una encuesta: resumen, distribución
+    por pregunta (incluye ranking de usuarios más elegidos), respuestas de
+    texto libre, y un detalle "crudo" (una fila por pregunta x intento) para
+    que se pueda hacer una tabla dinámica en Excel si se quiere ir más a
+    fondo.
+    """
+
+    encuesta = get_object_or_404(Encuesta, id=id)
+
+    if not encuesta.puede_editar(request.user):
+        raise PermissionDenied('No tienes permiso para exportar esta encuesta.')
+
+    respuestas = (
+        RespuestaEncuesta.objects
+        .filter(encuesta=encuesta)
+        .select_related('empleado')
+        .order_by('empleado__username', 'intento')
+    )
+
+    preguntas = list(encuesta.preguntas.all())
+
+    wb = openpyxl.Workbook()
+
+    font_normal = Font(name='Arial', size=10)
+    font_header = Font(name='Arial', size=10, bold=True, color='FFFFFF')
+    fill_header = PatternFill('solid', fgColor='2F5597')
+
+    def estilizar_encabezados(ws, fila=1):
+        for cell in ws[fila]:
+            cell.font = font_header
+            cell.fill = fill_header
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    def aplicar_fuente(ws, min_row=2, wrap=False):
+        for row in ws.iter_rows(min_row=min_row):
+            for cell in row:
+                cell.font = font_normal
+                if wrap:
+                    cell.alignment = Alignment(wrap_text=True, vertical='top')
+
+    def anchos(ws, letras_anchos):
+        for col, width in letras_anchos:
+            ws.column_dimensions[col].width = width
+
+    # ---------- Hoja: Resumen ----------
+    ws = wb.active
+    ws.title = 'Resumen'
+
+    agg = respuestas.aggregate(
+        promedio=Avg('puntuacion'), maximo=Max('puntuacion'), minimo=Min('puntuacion')
+    )
+    total_participantes = respuestas.values('empleado').distinct().count()
+
+    ws.append(['Campo', 'Valor'])
+    estilizar_encabezados(ws)
+
+    filas_resumen = [
+        ('Encuesta', encuesta.titulo),
+        ('Descripción', encuesta.descripcion),
+        ('Creador', encuesta.creador.username if encuesta.creador else ''),
+        ('Activa', 'Sí' if encuesta.activa else 'No'),
+        ('Fecha de vencimiento', encuesta.fechaVencimiento.strftime('%d/%m/%Y') if encuesta.fechaVencimiento else 'Sin fecha'),
+        ('Máx. intentos permitidos', encuesta.maxIntentos),
+        ('Total de preguntas', len(preguntas)),
+        ('Participantes que respondieron', total_participantes),
+        ('Intentos totales registrados', respuestas.count()),
+        ('Puntuación promedio', round(agg['promedio'], 2) if agg['promedio'] is not None else 'N/A'),
+        ('Puntuación máxima', agg['maximo'] if agg['maximo'] is not None else 'N/A'),
+        ('Puntuación mínima', agg['minimo'] if agg['minimo'] is not None else 'N/A'),
+    ]
+    for fila in filas_resumen:
+        ws.append(list(fila))
+
+    aplicar_fuente(ws)
+    anchos(ws, [('A', 28), ('B', 55)])
+
+    # ---------- Hoja: Por Pregunta ----------
+    ws2 = wb.create_sheet('Por Pregunta')
+    ws2.append(['Pregunta', 'Tipo', 'Opción / Usuario', 'Puntos', 'Veces elegida', '% del total'])
+    estilizar_encabezados(ws2)
+
+    for pregunta in preguntas:
+
+        total_resp_pregunta = DetalleRespuesta.objects.filter(pregunta=pregunta).count()
+
+        if pregunta.tipo == 'OPCION_MULTIPLE':
+
+            for opcion in pregunta.opciones.all():
+                count = DetalleRespuesta.objects.filter(opcion_seleccionada=opcion).count()
+                pct = round(count / total_resp_pregunta * 100, 1) if total_resp_pregunta else 0
+                ws2.append([
+                    pregunta.texto_pregunta, pregunta.get_tipo_display(),
+                    opcion.texto_opcion, opcion.puntos, count, pct
+                ])
+
+        elif pregunta.tipo in ('USUARIO_UNICO', 'USUARIO_MULTIPLE'):
+
+            ranking = (
+                User.objects
+                .filter(seleccionado_en_respuestas__pregunta=pregunta)
+                .annotate(votos=Count(
+                    'seleccionado_en_respuestas',
+                    filter=Q(seleccionado_en_respuestas__pregunta=pregunta)
+                ))
+                .order_by('-votos')
+            )
+
+            for u in ranking:
+                pct = round(u.votos / total_resp_pregunta * 100, 1) if total_resp_pregunta else 0
+                ws2.append([
+                    pregunta.texto_pregunta, pregunta.get_tipo_display(),
+                    u.nombre or u.username, '', u.votos, pct
+                ])
+
+        else:  # TEXTO
+            ws2.append([
+                pregunta.texto_pregunta, pregunta.get_tipo_display(),
+                f'{total_resp_pregunta} respuesta(s) de texto libre — ver hoja "Texto libre"',
+                '', total_resp_pregunta, ''
+            ])
+
+    aplicar_fuente(ws2)
+    anchos(ws2, [('A', 35), ('B', 22), ('C', 32), ('D', 10), ('E', 14), ('F', 12)])
+
+    # ---------- Hoja: Texto libre ----------
+    ws3 = wb.create_sheet('Texto libre')
+    ws3.append(['Pregunta', 'Empleado', 'Intento', 'Fecha', 'Respuesta'])
+    estilizar_encabezados(ws3)
+
+    for pregunta in preguntas:
+
+        if pregunta.tipo != 'TEXTO':
+            continue
+
+        detalles = (
+            DetalleRespuesta.objects
+            .filter(pregunta=pregunta)
+            .exclude(texto_respuesta__isnull=True)
+            .exclude(texto_respuesta__exact='')
+            .select_related('respuesta_encuesta__empleado')
+            .order_by('respuesta_encuesta__empleado__username')
+        )
+
+        for d in detalles:
+            ws3.append([
+                pregunta.texto_pregunta,
+                d.respuesta_encuesta.empleado.nombre or d.respuesta_encuesta.empleado.username,
+                d.respuesta_encuesta.intento,
+                d.respuesta_encuesta.fecha_respuesta.strftime('%d/%m/%Y %H:%M'),
+                d.texto_respuesta or '',
+            ])
+
+    aplicar_fuente(ws3, wrap=True)
+    anchos(ws3, [('A', 30), ('B', 22), ('C', 10), ('D', 18), ('E', 60)])
+
+    # ---------- Hoja: Detalle (una fila por pregunta x intento) ----------
+    ws4 = wb.create_sheet('Detalle')
+    ws4.append([
+        'Empleado', 'Usuario', 'Intento', 'Fecha', 'Puntuación total del intento',
+        'Pregunta', 'Tipo', 'Respuesta', 'Puntos de la opción'
+    ])
+    estilizar_encabezados(ws4)
+
+    for r in respuestas.prefetch_related(
+        'detalles__pregunta', 'detalles__opcion_seleccionada', 'detalles__usuarios_seleccionados'
+    ):
+
+        detalles_por_pregunta = {d.pregunta_id: d for d in r.detalles.all()}
+
+        for pregunta in preguntas:
+
+            detalle = detalles_por_pregunta.get(pregunta.id)
+
+            if not detalle:
+                respuesta_txt = '(sin responder)'
+                puntos = ''
+            elif pregunta.tipo == 'OPCION_MULTIPLE':
+                respuesta_txt = (
+                    detalle.opcion_seleccionada.texto_opcion
+                    if detalle.opcion_seleccionada
+                    else '(opción eliminada)'
+                )
+                puntos = detalle.opcion_seleccionada.puntos if detalle.opcion_seleccionada else ''
+            elif pregunta.tipo == 'TEXTO':
+                respuesta_txt = detalle.texto_respuesta or ''
+                puntos = ''
+            else:
+                nombres = [u.nombre or u.username for u in detalle.usuarios_seleccionados.all()]
+                respuesta_txt = ', '.join(nombres) if nombres else '(sin responder)'
+                puntos = ''
+
+            ws4.append([
+                r.empleado.nombre or r.empleado.username,
+                r.empleado.username,
+                r.intento,
+                r.fecha_respuesta.strftime('%d/%m/%Y %H:%M'),
+                r.puntuacion,
+                pregunta.texto_pregunta,
+                pregunta.get_tipo_display(),
+                respuesta_txt,
+                puntos,
+            ])
+
+    aplicar_fuente(ws4)
+    anchos(ws4, [
+        ('A', 22), ('B', 16), ('C', 8), ('D', 18), ('E', 14),
+        ('F', 35), ('G', 20), ('H', 40), ('I', 12),
+    ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+    nombre_archivo = 'resultados_' + ''.join(
+        c if c.isalnum() else '_' for c in encuesta.titulo
+    ).strip('_')
+
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}.xlsx"'
+    wb.save(response)
+
+    return response
+
+
+
+def eliminarEncuesta(request,id):
+    encuesta = Encuesta.objects.get(id=id)
+    encuesta.delete()
+    return redirect('Index:encuestasUsuario')

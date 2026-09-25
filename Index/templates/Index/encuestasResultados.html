@@ -1,0 +1,96 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container py-4">
+
+    <div class="fnBadComicRegularXL mb-3">
+        Resultados de mis encuestas
+    </div>
+
+    {% if items %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Encuesta</th>
+                        <th class="text-center">Preguntas</th>
+                        <th class="text-center">Participantes</th>
+                        <th class="text-center">Intentos totales</th>
+                        <th class="text-center">Puntaje promedio</th>
+                        <th class="text-center">Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.encuesta.titulo }}</td>
+                        <td class="text-center">{{ item.total_preguntas }}</td>
+                        <td class="text-center">{{ item.participantes }}</td>
+                        <td class="text-center">{{ item.intentos_totales }}</td>
+                        <td class="text-center">
+                            {% if item.tiene_puntaje %}
+                                {{ item.promedio|default:"—" }} pts
+                            {% else %}
+                                <span class="text-muted">Sin puntaje</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.encuesta.activa %}
+                                <span class="badge bg-green">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Cerrada</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.participantes > 0 %}
+                                <a href="{% url 'Index:encuestaResultadoDetalle' item.encuesta.id %}"
+                                    class="btn btn-sm btn-primary">
+                                    Ver resultados
+                                </a>
+                            {% else %}
+                                <span class="text-muted small">Sin respuestas aún</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if items.has_other_pages %}
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if items.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.previous_page_number }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Página {{ items.number }} de {{ items.paginator.num_pages }}
+                        </span>
+                    </li>
+                    {% if items.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.next_page_number }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+
+        <div class="alert alert-info">
+            No has creado ninguna encuesta todavía.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

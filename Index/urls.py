@@ -13,6 +13,8 @@ urlpatterns = [
     path("encuestas/",views.indexEncuestas,name='indexEncuestas'),
         path("encuestasUsuario/",views.encuestasUsuario,name='encuestasUsuario'),
         path("encuestasUsuario2/",views.buscarEncuestasSelfUser,name='buscarEncuestasSelfUser'),
+            path("eliminarEncuesta/<int:id>",views.eliminarEncuesta,name='eliminarEncuesta'),
+
 
     path("encuestaContestada/",views.encuestasContestadas,name='encuestasContestadas'),
     path("encuestaCrear/",views.crearEncuesta,name='crearEncuesta'),
@@ -23,6 +25,9 @@ urlpatterns = [
 
     path("responderEncuesta/<int:id>",views.responderEncuesta,name='responderEncuesta'),
     path("misRespuestas/<int:id>/",views.verRespuestasEncuesta,name='verRespuestasEncuesta'),
-
+    path("encuestaResultadoDetalle/<int:id>/",views.encuestaResultadoDetalle,name="encuestaResultadoDetalle"),
+        path("exportarResultadosExcel/<int:id>/",views.exportarResultadosExcel,name="exportarResultadosExcel"),
+        path("verRespuestaParticipante/<int:respuesta_id>/",views.verRespuestaParticipante,name="verRespuestaParticipante"),
+        path("eliminarEncuesta/<int:id>/",views.eliminarEncuesta,name="eliminarEncuesta"),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

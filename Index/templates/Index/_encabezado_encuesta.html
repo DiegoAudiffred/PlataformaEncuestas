@@ -1,32 +1,48 @@
-<!-- ENCABEZADO DE LA ENCUESTA -->
 <div class="card shadow-sm border-0 mb-4">
-
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-
         <div>
             <h2 class="h4 mb-1" id="titulo-encuesta">
                 {{ encuesta.titulo }}
             </h2>
-
             <div class="small" id="descripcion-encuesta">
                 {{ encuesta.descripcion }}
             </div>
         </div>
         <div>
-               <button type="button" class="btn btn-secondary"     data-bs-toggle="modal"
-            data-bs-target="#modal-enviarCorreo"> Notificar usuarios
-                
-        </button>
-        
-        <button
-            type="button"
-            class="btn btn-white"
-            data-bs-toggle="modal"
-            data-bs-target="#modal-editar-encuesta">
-            Editar Encuesta
-        </button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-enviarCorreo">
+                Notificar usuarios
+            </button>
+            
+            <button type="button" class="btn btn-white" data-bs-toggle="modal" data-bs-target="#modal-editar-encuesta">
+                Editar Encuesta
+            </button>
+
+            <button type="button" class="btn btn-tercero" data-bs-toggle="modal" data-bs-target="#modal-eliminar-encuesta">
+                Eliminar encuesta
+            </button>
         </div>
-
     </div>
+</div>
 
+<div class="modal fade" id="modal-eliminar-encuesta" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalEliminarLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'Index:eliminarEncuesta' encuesta.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar la encuesta <strong>{{ encuesta.titulo }}</strong>?</p>
+                    <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+                    <input type="hidden" name="id" value="{{ encuesta.id }}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

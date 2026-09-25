@@ -1,0 +1,257 @@
+{% extends 'layout/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+
+        <div>
+            <div class="fnBadComicRegularXL">{{ encuesta.titulo }}</div>
+            {% if encuesta.descripcion %}
+                <p class="text-muted mb-0">{{ encuesta.descripcion }}</p>
+            {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'Index:exportarResultadosExcel' encuesta.id %}" class="btn btn-success">
+                ⬇ Exportar a Excel
+            </a>
+            <a href="{% url 'Index:encuestasResultados' %}" class="btn btn-outline-secondary">
+                &larr; Volver
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Tarjetas resumen -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Participantes</div>
+                    <div class="fs-3 fw-bold">{{ total_participantes }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Intentos registrados</div>
+                    <div class="fs-3 fw-bold">{{ respuestas|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if tiene_puntaje %}
+
+            <div class="col-6 col-md-3">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Puntaje promedio</div>
+                        <div class="fs-3 fw-bold">
+                            {{ agg_puntaje.promedio|floatformat:1|default:"—" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">Máximo / Mínimo</div>
+                        <div class="fs-5 fw-bold">
+                            {{ agg_puntaje.maximo|default:"—" }} / {{ agg_puntaje.minimo|default:"—" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+
+            <div class="col-12 col-md-6">
+                <div class="card text-center shadow-sm h-100 bg-light">
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <span class="text-muted">
+                            Esta encuesta no tiene preguntas con puntaje asignado.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- Análisis por pregunta -->
+    <div class="fnBadComicRegular mb-2">Resultados por pregunta</div>
+
+    {% for item in analitica_preguntas %}
+
+        <div class="card shadow-sm mb-3">
+
+            <div class="card-header bg-white">
+                <span class="fw-semibold">{{ forloop.counter }}. {{ item.pregunta.texto_pregunta }}</span>
+                <span class="badge bg-info text-dark ms-2">{{ item.pregunta.get_tipo_display }}</span>
+                <span class="text-muted small ms-2">{{ item.total }} respuesta(s)</span>
+            </div>
+
+            <div class="card-body">
+
+                {% if item.tipo == 'opciones' or item.tipo == 'usuarios' %}
+
+                    {% if item.data %}
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <canvas id="chart-{{ item.pregunta.id }}" height="220"></canvas>
+                            </div>
+
+                            <div class="col-md-6">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>{% if item.tipo == 'usuarios' %}Usuario{% else %}Opción{% endif %}</th>
+                                            {% if item.tipo == 'opciones' %}<th>Puntos</th>{% endif %}
+                                            <th class="text-end">Veces</th>
+                                            <th class="text-end">%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fila in item.data %}
+                                        <tr>
+                                            <td>
+                                                {% if item.tipo == 'opciones' and fila.es_correcta %}
+                                                    ✓ {{ fila.etiqueta }}
+                                                {% else %}
+                                                    {{ fila.etiqueta }}
+                                                {% endif %}
+                                            </td>
+                                            {% if item.tipo == 'opciones' %}<td>{{ fila.puntos }}</td>{% endif %}
+                                            <td class="text-end">{{ fila.count }}</td>
+                                            <td class="text-end">{{ fila.pct }}%</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    {% else %}
+                        <div class="text-muted fst-italic">Nadie ha respondido esta pregunta todavía.</div>
+                    {% endif %}
+
+                {% elif item.tipo == 'texto' %}
+
+                    {% if item.data %}
+                        <div style="max-height: 260px; overflow-y: auto;">
+                            {% for d in item.data %}
+                                <div class="border-bottom py-2">
+                                    <div class="small text-muted">
+                                        {{ d.respuesta_encuesta.empleado.nombre|default:d.respuesta_encuesta.empleado.username }}
+                                        &nbsp;·&nbsp;
+                                        {{ d.respuesta_encuesta.fecha_respuesta|date:"d/m/Y H:i" }}
+                                    </div>
+                                    <div>{{ d.texto_respuesta }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted fst-italic">Nadie ha respondido esta pregunta todavía.</div>
+                    {% endif %}
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+    <!-- Tabla de participantes -->
+    <div class="fnBadComicRegular mb-2 mt-4">Quién respondió</div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
+            <thead class="table-dark">
+                <tr>
+                    <th>Empleado</th>
+                    <th class="text-center">Intento</th>
+                    <th class="text-center">Fecha</th>
+                    {% if tiene_puntaje %}<th class="text-center">Puntaje</th>{% endif %}
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in respuestas %}
+                <tr>
+                    <td>{{ r.empleado.nombre|default:r.empleado.username }}</td>
+                    <td class="text-center">{{ r.intento }}</td>
+                    <td class="text-center">{{ r.fecha_respuesta|date:"d/m/Y H:i" }}</td>
+                    {% if tiene_puntaje %}<td class="text-center">{{ r.puntuacion }}</td>{% endif %}
+                    <td class="text-end">
+                        <a href="{% url 'Index:verRespuestaParticipante' r.id %}" class="btn btn-sm btn-outline-primary">
+                            Ver respuestas
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                        Todavía nadie ha respondido esta encuesta.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const datasetsPorPregunta = {{ analitica_preguntas_json|safe }};
+
+        datasetsPorPregunta.forEach((pregunta) => {
+
+            const canvas = document.getElementById('chart-' + pregunta.id);
+            if (!canvas) return;
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: pregunta.labels,
+                    datasets: [{
+                        label: 'Veces elegida',
+                        data: pregunta.valores,
+                        backgroundColor: '#2F5597',
+                    }],
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0 } },
+                    },
+                },
+            });
+
+        });
+
+    });
+</script>
+
+{% endblock %}
